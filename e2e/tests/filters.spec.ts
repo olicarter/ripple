@@ -79,7 +79,7 @@ test('"All statuses" restores full list', async ({ page, asAlice }) => {
   await page.getByRole('button', { name: 'Open' }).click();
   await expect(page.getByText('Closed one')).not.toBeVisible();
 
-  await page.getByRole('button', { name: 'All statuses' }).click();
+  await page.getByRole('button', { name: 'All', exact: true }).click();
   await expect(page.getByText('Open one')).toBeVisible();
   await expect(page.getByText('Closed one')).toBeVisible();
 });

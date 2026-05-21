@@ -89,7 +89,9 @@ export function MembersPage() {
     try {
       await orgsApi.removeMember(org.slug, currentUser.id);
       addToast('You have left the organisation', 'info');
-      navigate({ to: '/' });
+      // Use a hard navigation so the Electric cache is cleared before OrgListPage
+      // auto-redirect logic runs, preventing a bounce back to this org.
+      window.location.href = '/';
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to leave organisation', 'error');
     }

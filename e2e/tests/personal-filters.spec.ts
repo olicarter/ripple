@@ -1,31 +1,31 @@
 import { test, expect } from '../fixtures';
 import { createTopic, createProposal, createVote, createComment } from '../helpers';
 
-// ── "My proposals" filter ─────────────────────────────────────────────────────
+// ── "Mine" filter ─────────────────────────────────────────────────────
 
-test('"My proposals" filter is visible when logged in', async ({ page, asAlice }) => {
+test('"Mine" filter is visible when logged in', async ({ page, asAlice }) => {
   await page.goto('/orgs/ripple-test/proposals');
-  await expect(page.getByRole('button', { name: 'My proposals' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mine' })).toBeVisible();
 });
 
-test('"My proposals" shows only proposals authored by current user', async ({ page, asAlice, bob, request }) => {
+test('"Mine" shows only proposals authored by current user', async ({ page, asAlice, bob, request }) => {
   const topic = await createTopic(page.request, 'Policy');
   await createProposal(page.request, topic.id, "Alice's proposal");
   await createProposal(request, topic.id, "Bob's proposal");
 
   await page.goto('/orgs/ripple-test/proposals');
-  await page.getByRole('button', { name: 'My proposals' }).click();
+  await page.getByRole('button', { name: 'Mine' }).click();
 
   await expect(page.getByText("Alice's proposal")).toBeVisible();
   await expect(page.getByText("Bob's proposal")).not.toBeVisible();
 });
 
-test('"My votes" filter is visible when logged in', async ({ page, asAlice }) => {
+test('"Voted" filter is visible when logged in', async ({ page, asAlice }) => {
   await page.goto('/orgs/ripple-test/proposals');
-  await expect(page.getByRole('button', { name: 'My votes' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Voted' })).toBeVisible();
 });
 
-test('"My votes" shows only proposals Alice voted on', async ({ page, asAlice, bob }) => {
+test('"Voted" shows only proposals Alice voted on', async ({ page, asAlice, bob }) => {
   const topic = await createTopic(page.request, 'Policy');
   const voted = await createProposal(page.request, topic.id, 'Voted proposal');
   const unvoted = await createProposal(page.request, topic.id, 'Unvoted proposal');
@@ -33,7 +33,7 @@ test('"My votes" shows only proposals Alice voted on', async ({ page, asAlice, b
   await createVote(page.request, voted.id, asAlice.id, 'yes');
 
   await page.goto('/orgs/ripple-test/proposals');
-  await page.getByRole('button', { name: 'My votes' }).click();
+  await page.getByRole('button', { name: 'Voted' }).click();
 
   await expect(page.getByText('Voted proposal')).toBeVisible();
   await expect(page.getByText('Unvoted proposal')).not.toBeVisible();

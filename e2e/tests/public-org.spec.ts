@@ -6,9 +6,9 @@ test.describe('public organisation', () => {
     const checkbox = page.getByLabel('Allow anyone to discover and join this organisation');
     await expect(checkbox).not.toBeChecked();
     await checkbox.check();
-    await expect(page.getByText('Setting saved')).toBeVisible();
+    await expect(page.getByText('Setting saved').first()).toBeVisible();
     await checkbox.uncheck();
-    await expect(page.getByText('Setting saved')).toBeVisible();
+    await expect(page.getByText('Setting saved').first()).toBeVisible();
   });
 
   test('authenticated non-member sees public org in Discover and can join', async ({ page, asAlice, bob }) => {
@@ -32,7 +32,7 @@ test.describe('public organisation', () => {
     await expect(page.getByRole('heading', { name: 'Discover' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Open Community')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Join' }).click();
+    await page.getByTestId('discover-section').getByRole('button', { name: 'Join' }).click();
     await expect(page).toHaveURL(/open-community-test/, { timeout: 8000 });
   });
 
@@ -63,7 +63,7 @@ test.describe('public organisation', () => {
 
     await page.goto(`/orgs/${ORG_SLUG}/proposals`);
     // Shell renders with a Sign in button — not the full AuthPanel
-    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('button', { name: 'Sign in with passkey' })).not.toBeVisible();
   });
 

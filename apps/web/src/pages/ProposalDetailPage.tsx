@@ -1718,7 +1718,7 @@ export function ProposalDetailPage() {
           {isTemperatureCheck ? 'Sentiment (non-binding)' : 'Results'}
         </h3>
         {org.voting_visibility === 'hidden' && isOpen && !isDeliberating ? (
-          <p style={{ fontSize: 13, color: '#aaa', margin: 0 }}>Results hidden until voting closes</p>
+          <p style={{ fontSize: 13, color: '#aaa', margin: 0 }}>Vote counts are hidden until this proposal closes</p>
         ) : tallyLoading ? (
           <p style={{ fontSize: 13, color: '#aaa', margin: 0 }}>Loading tally…</p>
         ) : tally ? (
@@ -2901,6 +2901,7 @@ export function ProposalDetailPage() {
                               {isOwn && (
                                 <button
                                   type="button"
+                                  data-testid="comment-edit-btn"
                                   onClick={() => { setEditingCommentId(c.id); setEditCommentBody(c.body); }}
                                   style={{ fontSize: 11, padding: '0.1rem 0.4rem', color: '#aaa', border: '1px solid #e0e0e0', background: 'none', borderRadius: 3, cursor: 'pointer' }}
                                 >
@@ -2981,6 +2982,20 @@ export function ProposalDetailPage() {
                                   Reply
                                 </button>
                               )}
+                              {currentUser && (
+                                <button
+                                  type="button"
+                                  data-testid="quote-reply-btn"
+                                  onClick={() => {
+                                    const quoted = c.body.split('\n').map((l: string) => '> ' + l).join('\n') + '\n\n';
+                                    setCommentBody(quoted);
+                                    commentTextareaRef.current?.focus();
+                                  }}
+                                  style={{ fontSize: 11, padding: '1px 6px', border: '1px solid #e0e0e0', borderRadius: 10, background: 'transparent', cursor: 'pointer', color: '#555' }}
+                                >
+                                  Quote
+                                </button>
+                              )}
                               {browserLanguage && !translatedComments[c.id] && (
                                 <button
                                   type="button"
@@ -3046,7 +3061,7 @@ export function ProposalDetailPage() {
                     )}
                     {/* Threaded replies */}
                     {(repliesFor(c.id).length > 0 || replyingToId === c.id) && (
-                      <div style={{ marginTop: '0.75rem', borderLeft: '2px solid #e8e8e8', paddingLeft: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div data-testid="replies-list" style={{ marginTop: '0.75rem', borderLeft: '2px solid #e8e8e8', paddingLeft: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         {repliesFor(c.id).map((reply: Comment) => {
                           const replyAuthor = reply.author_id ? userMap[reply.author_id] : undefined;
                           const isOwnReply = currentUser?.id === reply.author_id;

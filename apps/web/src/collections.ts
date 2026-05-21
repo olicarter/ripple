@@ -182,7 +182,7 @@ export function createOrgCollections(orgId: string) {
       getKey: (row: unknown) => (row as Comment).id,
       onInsert: async ({ transaction }) => {
         const c = transaction.mutations[0].modified as Comment;
-        const result = await commentsApi.create(c.proposal_id, { id: c.id, body: c.body });
+        const result = await commentsApi.create(c.proposal_id, { id: c.id, body: c.body, parent_comment_id: c.parent_comment_id ?? null });
         return { txid: result.txid };
       },
       onUpdate: async ({ transaction }) => {

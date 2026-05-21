@@ -954,7 +954,7 @@ export function ProposalsPage() {
                           <div className={styles.voteHidden}>hidden</div>
                         )}
                         {commentCount > 0 && (
-                          <div className={styles.voteComments}>{commentCount}c</div>
+                          <div className={styles.voteComments}>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</div>
                         )}
                       </div>
                     )}

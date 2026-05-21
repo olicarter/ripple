@@ -8,7 +8,7 @@ test('/ shows organisations list', async ({ page, asAlice }) => {
 test('proposals nav link is active on /proposals', async ({ page, asAlice }) => {
   await page.goto('/orgs/ripple-test/proposals');
   const link = page.getByRole('link', { name: 'Proposals' });
-  await expect(link).toHaveCSS('font-weight', '600');
+  await expect(link).toHaveCSS('font-weight', '500');
 });
 
 test('delegations nav link navigates to /delegations', async ({ page, asAlice }) => {
@@ -20,11 +20,11 @@ test('delegations nav link navigates to /delegations', async ({ page, asAlice })
 test('delegations nav link is active on /delegations', async ({ page, asAlice }) => {
   await page.goto('/orgs/ripple-test/delegations');
   const link = page.getByRole('link', { name: 'Delegations' });
-  await expect(link).toHaveCSS('font-weight', '600');
+  await expect(link).toHaveCSS('font-weight', '500');
 });
 
 test('proposals nav link is not active on /delegations', async ({ page, asAlice }) => {
   await page.goto('/orgs/ripple-test/delegations');
   const link = page.getByRole('link', { name: 'Proposals' });
-  await expect(link).not.toHaveCSS('font-weight', '600');
+  await expect(link).not.toHaveCSS('font-weight', '500');
 });

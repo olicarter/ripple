@@ -199,13 +199,11 @@ export function DelegationsPage() {
         </div>
 
         {outgoing.length === 0 ? (
-          !showForm ? null : (
-            <EmptyState
-              variant="delegations"
-              title="No delegations set"
-              description="Delegate your vote to someone you trust on all topics or a specific one."
-            />
-          )
+          <EmptyState
+            variant="delegations"
+            title="No delegations set"
+            description="Delegate your vote to someone you trust on all topics or a specific one."
+          />
         ) : (
           <div className={styles.list}>
             {outgoing.map((d: Delegation) => {
@@ -255,7 +253,7 @@ export function DelegationsPage() {
       </section>
 
       {/* Add delegation form */}
-      {showForm && (
+      {(showForm || outgoing.length === 0) && (
         <section className={styles.section}>
           <h3 className={styles.sectionHeading}>Add delegation</h3>
           <form className={styles.form} onSubmit={handleAdd}>

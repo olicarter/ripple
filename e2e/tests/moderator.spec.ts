@@ -27,7 +27,7 @@ test.describe('moderator tools', () => {
     await switchToModerator(page, bob);
     await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
 
-    await expect(page.getByRole('button', { name: 'Edit proposal' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit', exact: true }).first()).toBeVisible();
   });
 
   test('moderator can close any open proposal', async ({ page, asAlice, bob, org }) => {

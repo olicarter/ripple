@@ -18,7 +18,6 @@ export function ConfirmButton({ label, confirmLabel = 'Yes', onConfirm, disabled
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-fg-muted)' }}>Are you sure?</span>
         <button
           type="button"
-          aria-label={`Confirm: ${confirmLabel}`}
           onClick={async () => {
             setConfirming(false);
             await onConfirm();

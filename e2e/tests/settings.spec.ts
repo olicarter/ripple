@@ -10,13 +10,13 @@ test('settings page loads and shows current name', async ({ page, asAlice }) => 
 test('can update display name', async ({ page, asAlice }) => {
   await page.goto('/settings');
   await page.getByLabel('Name').fill('Alice Updated');
-  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByText('Name updated')).toBeVisible();
 });
 
 test('save button disabled when name unchanged', async ({ page, asAlice }) => {
   await page.goto('/settings');
-  await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
 });
 
 test('settings page shows passkeys section', async ({ page, asAlice }) => {

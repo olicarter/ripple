@@ -9,7 +9,7 @@ test.describe('comment pinning', () => {
 
     await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Pinnable comment')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: 'Pin' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Pin' }).first()).toBeVisible();
   });
 
   test('author can pin a comment and it shows pinned indicator', async ({ page, asAlice }) => {
@@ -19,11 +19,11 @@ test.describe('comment pinning', () => {
 
     await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Key context comment')).toBeVisible({ timeout: 10000 });
-    await page.getByRole('button', { name: 'Pin' }).click();
+    await page.getByRole('button', { name: 'Pin', exact: true }).first().click();
 
     await expect(page.getByText('Comment pinned')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('📌 Pinned')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Unpin' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Unpin', exact: true }).first()).toBeVisible();
   });
 
   test('pinned comment appears at top of discussion', async ({ page, asAlice, bob }) => {

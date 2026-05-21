@@ -42,7 +42,7 @@ test.describe('admin panel', () => {
 
   test('admin can update org name', async ({ page, asAlice }) => {
     await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
-    const nameInput = page.getByLabel('Name');
+    const nameInput = page.locator('#admin-name');
     await nameInput.fill('Ripple Updated');
     await page.getByRole('button', { name: 'Save changes' }).click();
     await expect(page.getByText('Organisation updated')).toBeVisible();
@@ -113,8 +113,10 @@ test.describe('admin panel', () => {
 
     await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
     // Wait for Bob to appear in the transfer ownership dropdown (Electric sync)
-    await expect(page.locator('select')).toContainText(`${bob.name}`);
-    await page.locator('select').selectOption({ label: `${bob.name} (member)` });
+    const transferSection = page.locator('section').filter({ hasText: 'Transfer ownership' });
+    const transferSelect = transferSection.locator('select');
+    await expect(transferSelect).toContainText(`${bob.name}`);
+    await transferSelect.selectOption({ label: `${bob.name} (member)` });
     await page.getByRole('button', { name: 'Transfer ownership' }).click();
     await page.getByRole('button', { name: 'Yes, transfer' }).click();
 

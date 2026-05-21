@@ -499,7 +499,7 @@ export function AdminPage() {
     try {
       await orgsApi.delete(org.slug);
       addToast('Organisation deleted', 'info');
-      navigate({ to: '/' });
+      window.location.href = '/';
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to delete', 'error');
       setDeleting(false);

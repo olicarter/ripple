@@ -7,7 +7,7 @@ test('own comment shows Edit button', async ({ page, asAlice }) => {
   await createComment(page.request, proposal.id, 'My original comment');
 
   await page.goto(`/orgs/ripple-test/proposals/${proposal.id}`);
-  await expect(page.getByRole('button', { name: 'Edit', exact: true }).first()).toBeVisible();
+  await expect(page.getByTestId('comment-edit-btn').first()).toBeVisible();
 });
 
 test('can edit own comment', async ({ page, asAlice }) => {
@@ -16,7 +16,7 @@ test('can edit own comment', async ({ page, asAlice }) => {
   await createComment(page.request, proposal.id, 'Original comment text');
 
   await page.goto(`/orgs/ripple-test/proposals/${proposal.id}`);
-  await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
+  await page.getByTestId('comment-edit-btn').first().click();
 
   const textarea = page.getByTestId('comment-edit-textarea');
   await textarea.clear();
@@ -34,7 +34,7 @@ test('edited comment shows "(edited)" label', async ({ page, asAlice }) => {
   await createComment(page.request, proposal.id, 'First version');
 
   await page.goto(`/orgs/ripple-test/proposals/${proposal.id}`);
-  await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
+  await page.getByTestId('comment-edit-btn').first().click();
   const textarea = page.getByTestId('comment-edit-textarea');
   await textarea.clear();
   await textarea.fill('Second version');
@@ -49,7 +49,7 @@ test('cancel edit restores original comment', async ({ page, asAlice }) => {
   await createComment(page.request, proposal.id, 'Keep this comment');
 
   await page.goto(`/orgs/ripple-test/proposals/${proposal.id}`);
-  await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
+  await page.getByTestId('comment-edit-btn').first().click();
   const textarea = page.getByTestId('comment-edit-textarea');
   await textarea.clear();
   await textarea.fill('Discarded change');

@@ -1,20 +1,21 @@
 import { test, expect, API, ORG_SLUG } from '../fixtures';
+import { createTopic, TEST_ORG_ID } from '../helpers';
 
 test.describe('anonymous voting', () => {
   async function createAnonProposal(page: Parameters<Parameters<typeof test>[1]>[0]) {
-    const orgRes = await page.request.get(`${API}/api/orgs/${ORG_SLUG}`).then(r => r.json());
+    const topic = await createTopic(page.request, 'Anonymous Voting Topic');
     const propRes = await page.request.post(`${API}/api/proposals`, {
       data: {
         id: crypto.randomUUID(),
-        organisation_id: orgRes.id,
-        topic_id: null,
+        organisation_id: TEST_ORG_ID,
+        topic_id: topic.id,
         title: 'Anonymous voting test',
         status: 'open',
         anonymous_voting: true,
       },
     });
     const { item: proposal } = await propRes.json();
-    return { proposal, orgRes };
+    return { proposal };
   }
 
   test('votes list returns null user_id for anonymous proposal', async ({ page, asAlice }) => {
@@ -45,7 +46,7 @@ test.describe('anonymous voting', () => {
     const { proposal } = await createAnonProposal(page);
 
     await page.goto(`/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
-    await expect(page.getByText('Anonymous voting')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Anonymous voting').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('UI shows Anonymous member for vote statements on anonymous proposals', async ({ page, asAlice }) => {
@@ -57,6 +58,6 @@ test.describe('anonymous voting', () => {
 
     await page.goto(`/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Anonymous member')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Good idea')).toBeVisible();
+    await expect(page.getByText('Good idea').first()).toBeVisible();
   });
 });

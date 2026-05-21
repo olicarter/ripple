@@ -23,6 +23,9 @@ test.describe('passkey authentication', () => {
     const cdp = await context.newCDPSession(page);
     await addVirtualAuthenticator(cdp);
 
+    // Open the auth panel from the landing page
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    // Switch to register mode
     await page.getByRole('button', { name: 'Register' }).click();
     await page.getByLabel('Name').fill('Passkey User');
     await page.getByLabel('Email').fill('passkey@example.com');
@@ -38,6 +41,7 @@ test.describe('passkey authentication', () => {
     await addVirtualAuthenticator(cdp);
 
     // Register
+    await page.getByRole('button', { name: 'Sign in' }).click();
     await page.getByRole('button', { name: 'Register' }).click();
     await page.getByLabel('Name').fill('Passkey User');
     await page.getByLabel('Email').fill('passkey@example.com');
@@ -46,6 +50,8 @@ test.describe('passkey authentication', () => {
 
     // Sign out
     await page.getByRole('button', { name: 'Sign out' }).click();
+    // Re-open auth panel from landing page
+    await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page.getByRole('button', { name: 'Sign in with passkey' })).toBeVisible();
 
     // Sign in with the stored passkey (virtual authenticator still holds the credential)
@@ -56,12 +62,15 @@ test.describe('passkey authentication', () => {
   test('shows error when passkey creation is cancelled', async ({ page }) => {
     // No virtual authenticator — WebAuthn fails with NotSupportedError
     await page.goto('/');
+    // Open the auth panel from the landing page
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    // Switch to register mode
     await page.getByRole('button', { name: 'Register' }).click();
     await page.getByLabel('Name').fill('Passkey User');
     await page.getByLabel('Email').fill('passkey@example.com');
     await page.getByRole('button', { name: 'Create passkey' }).click();
 
     // App catches the error and displays it in red (no authenticator → "No available authenticator..." from the browser)
-    await expect(page.locator('p[style*="color"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId('auth-error')).toBeVisible({ timeout: 10000 });
   });
 });

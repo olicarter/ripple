@@ -7,7 +7,7 @@ test.describe('proposal tags', () => {
     const proposal = await createProposal(page.request, topic.id, 'Tag me');
 
     await page.goto(`/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
-    await page.getByRole('button', { name: 'Edit proposal' }).click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
     await page.getByTestId('tag-input').fill('urgent');
     await page.getByTestId('add-tag-btn').click();
     await page.getByTestId('tag-input').fill('budget');
@@ -25,7 +25,7 @@ test.describe('proposal tags', () => {
 
     // Add a tag via edit
     await page.goto(`/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
-    await page.getByRole('button', { name: 'Edit proposal' }).click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
     await page.getByTestId('tag-input').fill('environment');
     await page.getByTestId('add-tag-btn').click();
     await page.getByRole('button', { name: 'Save changes' }).click();
@@ -40,7 +40,7 @@ test.describe('proposal tags', () => {
     const proposal = await createProposal(page.request, topic.id, 'Tagged for filter');
 
     await page.goto(`/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
-    await page.getByRole('button', { name: 'Edit proposal' }).click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
     await page.getByTestId('tag-input').fill('finance');
     await page.getByTestId('add-tag-btn').click();
     await page.getByRole('button', { name: 'Save changes' }).click();
@@ -56,7 +56,7 @@ test.describe('proposal tags', () => {
     await createProposal(page.request, topic.id, 'No tags here');
 
     await page.goto(`/orgs/${ORG_SLUG}/proposals/${p1.id}`);
-    await page.getByRole('button', { name: 'Edit proposal' }).click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
     await page.getByTestId('tag-input').fill('foo');
     await page.getByTestId('add-tag-btn').click();
     await page.getByRole('button', { name: 'Save changes' }).click();
@@ -74,7 +74,7 @@ test.describe('proposal tags', () => {
     const proposal = await createProposal(page.request, topic.id, 'Remove tag test');
 
     await page.goto(`/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
-    await page.getByRole('button', { name: 'Edit proposal' }).click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
     await page.getByTestId('tag-input').fill('removable');
     await page.getByTestId('add-tag-btn').click();
     // Remove the tag

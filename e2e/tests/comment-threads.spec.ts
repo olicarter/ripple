@@ -43,7 +43,9 @@ test.describe('threaded comment replies', () => {
     await page.getByPlaceholder('Write a reply…').fill('This is my reply');
     await page.getByRole('button', { name: 'Post', exact: true }).click();
 
-    await expect(page.getByText('This is my reply')).toBeVisible({ timeout: 8000 });
+    // Wait for the reply form to dismiss, then verify the reply is nested
+    await expect(page.getByPlaceholder('Write a reply…')).not.toBeVisible({ timeout: 8000 });
+    await expect(page.getByTestId('replies-list').getByText('This is my reply')).toBeVisible({ timeout: 8000 });
   });
 
   test('Cancel button dismisses the reply form', async ({ page, asAlice }) => {

@@ -270,7 +270,7 @@ export function OrgListPage() {
       )}
 
       {discoverOrgs.length > 0 && (
-        <div className={styles.discoverSection}>
+        <div className={styles.discoverSection} data-testid="discover-section">
           <h3 className={styles.discoverHeading}>Discover</h3>
           <div className={styles.discoverList}>
             {discoverOrgs.map((org) => (
