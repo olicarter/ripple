@@ -9,6 +9,7 @@ import {
   Link,
   Outlet,
   useParams,
+  useRouterState,
 } from '@tanstack/react-router';
 import { useLiveQuery } from '@tanstack/react-db';
 import { request, authApi, type User, type Organisation, type Membership } from './api';
@@ -370,7 +371,7 @@ function AuthPanel({ onLogin, onDismiss }: { onLogin: (user: User) => void; onDi
         )}
 
         {error && (
-          <p style={{ color: 'var(--color-error)', marginTop: 'var(--space-4)', marginBottom: 0, fontSize: 'var(--text-base)' }}>
+          <p data-testid="auth-error" style={{ color: 'var(--color-error)', marginTop: 'var(--space-4)', marginBottom: 0, fontSize: 'var(--text-base)' }}>
             {error}
           </p>
         )}
@@ -525,10 +526,11 @@ function Shell({ user, onLogout, onSignIn, orgSlug, orgId, children, notificatio
   );
 }
 
-// Root layout — no org context yet (used for / and /settings and /users/:id)
+// Root layout — no org context yet (used for /, /pricing, /settings and /users/:id)
 function RootComponent() {
   const [user, setUser] = useState<User | null>(getStoredUser);
   const [showAuth, setShowAuth] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function handleLogin(u: User) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
@@ -543,14 +545,22 @@ function RootComponent() {
   }
 
   if (!user) {
+    if (pathname === '/') {
+      return (
+        <UserContext.Provider value={null}>
+          <LandingPage onSignIn={() => setShowAuth(true)} />
+          {showAuth && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--color-bg)' }}>
+              <AuthPanel onLogin={handleLogin} onDismiss={() => setShowAuth(false)} />
+            </div>
+          )}
+        </UserContext.Provider>
+      );
+    }
+    // Public routes (e.g. /pricing) render with null user context but no auth wall
     return (
       <UserContext.Provider value={null}>
-        <LandingPage onSignIn={() => setShowAuth(true)} />
-        {showAuth && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--color-bg)' }}>
-            <AuthPanel onLogin={handleLogin} onDismiss={() => setShowAuth(false)} />
-          </div>
-        )}
+        <Outlet />
       </UserContext.Provider>
     );
   }
@@ -750,7 +760,7 @@ const verifyEmailRoute = createRoute({
 });
 
 const pricingRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => globalLayout,
   path: '/pricing',
   component: PricingPage,
 });
@@ -792,11 +802,10 @@ const setupRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-  globalLayout.addChildren([indexRoute, settingsRoute]),
+  globalLayout.addChildren([indexRoute, settingsRoute, pricingRoute]),
   orgLayout.addChildren([orgIndexRoute, proposalsRoute, proposalDetailRoute, delegationsRoute, delegationNetworkRoute, membersRoute, userProfileRoute, joinRoute, activityRoute, adminRoute, decisionRecordRoute, setupRoute]),
   publicResultsRoute,
   verifyEmailRoute,
-  pricingRoute,
   acceptInviteRoute,
   magicLinkRoute,
   unsubscribeRoute,

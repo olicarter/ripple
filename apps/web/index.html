@@ -3,16 +3,87 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ripple</title>
+
+    <title>Ripple — Liquid democracy for any organisation</title>
+    <meta name="description" content="Ripple brings liquid democracy to cooperatives, councils, businesses and neighbourhoods. Make decisions together with proposals, delegation, and full transparency. Free to start." />
+    <meta name="keywords" content="liquid democracy, voting platform, delegated voting, cooperative governance, council voting, proposals, decision-making" />
+    <link rel="canonical" href="https://ripple.vote/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ripple" />
+    <meta property="og:title" content="Ripple — Liquid democracy for any organisation" />
+    <meta property="og:description" content="Proposals, delegation, and full transparency for any group. Vote on what you care about. Trust someone else on the rest." />
+    <meta property="og:url" content="https://ripple.vote/" />
+    <meta property="og:image" content="https://ripple.vote/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ripple — Liquid democracy for any organisation" />
+    <meta name="twitter:description" content="Proposals, delegation, and full transparency for any group. Free to start." />
+    <meta name="twitter:image" content="https://ripple.vote/og-image.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Theme flicker prevention -->
     <script>
       (function() {
         var t = localStorage.getItem('ripple_theme');
         if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
       })();
     </script>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "Ripple",
+          "url": "https://ripple.vote",
+          "logo": "https://ripple.vote/favicon.svg",
+          "description": "Liquid democracy platform for cooperatives, councils, governments, and any organisation that needs to make decisions together."
+        },
+        {
+          "@type": "WebSite",
+          "name": "Ripple",
+          "url": "https://ripple.vote"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Ripple",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "description": "Liquid democracy voting platform with proposals, delegation chains, and full audit trails.",
+          "offers": [
+            {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "name": "Free Plan",
+              "description": "1 organisation, up to 15 members, unlimited proposals and votes."
+            },
+            {
+              "@type": "Offer",
+              "price": "29",
+              "priceCurrency": "USD",
+              "name": "Pro Plan",
+              "description": "Unlimited organisations and members, analytics, Slack integration."
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

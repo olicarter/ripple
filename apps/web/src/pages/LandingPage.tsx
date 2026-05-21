@@ -5,6 +5,51 @@ import { organisationsCollection } from '../collections';
 import type { Organisation } from '../api';
 import styles from './LandingPage.module.css';
 
+const FAQS = [
+  {
+    q: 'What is liquid democracy?',
+    a: 'Liquid democracy sits between direct and representative democracy. Vote yourself on issues you care about, or delegate your vote to someone you trust — and delegates can delegate further. You can reclaim your vote at any time on any proposal, instantly, without anyone\'s permission.',
+  },
+  {
+    q: 'Is Ripple free to use?',
+    a: 'Yes. The free plan is free forever — 1 organisation, up to 15 members, and unlimited proposals and votes. No credit card required. The Pro plan is $29/month per organisation for unlimited members, analytics, and integrations.',
+  },
+  {
+    q: 'How does delegation work in practice?',
+    a: 'Set a delegate for a topic in your settings — someone you trust to vote on your behalf. Their vote carries your weight alongside their own. You can set different delegates for different topics. Vote directly on any proposal to override your delegation for that vote only.',
+  },
+  {
+    q: 'What vote types are supported?',
+    a: 'Yes/No/Abstain, ranked choice, approval voting, and score voting. You choose the format when you create a proposal.',
+  },
+  {
+    q: 'Can I keep my organisation private?',
+    a: 'Yes. You choose whether your organisation is public (anyone can discover and join) or private (members join via your invite link only). Private organisations and their proposals are not visible to non-members.',
+  },
+  {
+    q: 'Do members need to install anything?',
+    a: 'No. Ripple is entirely browser-based. Members sign in with a passkey or magic link — no passwords, no app downloads.',
+  },
+];
+
+const PRICING_FREE = [
+  '1 organisation',
+  'Up to 15 members',
+  'Unlimited proposals & votes',
+  'All voting types',
+  'Delegations & weighted voting',
+  'Comments & audit log',
+];
+
+const PRICING_PRO = [
+  'Unlimited organisations',
+  'Unlimited members',
+  'Everything in Free',
+  'Participation analytics',
+  'Email domain restriction',
+  'Slack integration',
+];
+
 const WHY = [
   {
     title: 'Direct democracy doesn\'t scale',
@@ -165,7 +210,10 @@ export function LandingPage({ onSignIn }: Props) {
     <div className={styles.page}>
       <header className={styles.header}>
         <span className={styles.logo}>◆ Ripple</span>
-        <button onClick={onSignIn} className={styles.headerSignIn}>Sign in</button>
+        <nav className={styles.headerNav}>
+          <Link to="/pricing" className={styles.headerNavLink}>Pricing</Link>
+          <button onClick={onSignIn} className={styles.headerSignIn}>Sign in</button>
+        </nav>
       </header>
 
       {/* Hero */}
@@ -354,6 +402,63 @@ export function LandingPage({ onSignIn }: Props) {
         </section>
       )}
 
+      {/* Pricing teaser */}
+      <section className={styles.section}>
+        <div className={styles.inner}>
+          <p className={styles.eyebrow}>Pricing</p>
+          <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
+          <p className={styles.sectionSub}>Start free. Upgrade when your organisation grows.</p>
+          <div className={styles.pricingTeaser}>
+            <div className={styles.pricingTier}>
+              <div className={styles.pricingTierHeader}>
+                <span className={styles.pricingTierName}>Free</span>
+                <div className={styles.pricingTierPrice}>
+                  <span className={styles.pricingTierAmount}>$0</span>
+                  <span className={styles.pricingTierPer}>/month</span>
+                </div>
+                <p className={styles.pricingTierNote}>For small teams and personal use</p>
+              </div>
+              <ul className={styles.pricingTierFeatures}>
+                {PRICING_FREE.map((f) => <li key={f}>{f}</li>)}
+              </ul>
+            </div>
+            <div className={`${styles.pricingTier} ${styles.pricingTierHighlighted}`}>
+              <div className={styles.pricingTierBadge}>Popular</div>
+              <div className={styles.pricingTierHeader}>
+                <span className={styles.pricingTierName}>Pro</span>
+                <div className={styles.pricingTierPrice}>
+                  <span className={styles.pricingTierAmount}>$29</span>
+                  <span className={styles.pricingTierPer}>/month per org</span>
+                </div>
+                <p className={styles.pricingTierNote}>For growing teams that need more</p>
+              </div>
+              <ul className={styles.pricingTierFeatures}>
+                {PRICING_PRO.map((f) => <li key={f}>{f}</li>)}
+              </ul>
+            </div>
+          </div>
+          <div className={styles.pricingTeaserFooter}>
+            <Link to="/pricing" className={styles.pricingTeaserLink}>See full pricing →</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className={`${styles.section} ${styles.sectionDark}`}>
+        <div className={styles.inner}>
+          <p className={`${styles.eyebrow} ${styles.eyebrowLight}`}>FAQ</p>
+          <h2 className={`${styles.sectionTitle} ${styles.sectionTitleLight}`}>Common questions</h2>
+          <dl className={styles.faqList}>
+            {FAQS.map((item) => (
+              <details key={item.q} className={styles.faqItem}>
+                <summary className={styles.faqQuestion}>{item.q}</summary>
+                <p className={styles.faqAnswer}>{item.a}</p>
+              </details>
+            ))}
+          </dl>
+        </div>
+      </section>
+
       {/* Bottom CTA */}
       <section className={styles.ctaStrip}>
         <div className={styles.inner}>
@@ -369,8 +474,14 @@ export function LandingPage({ onSignIn }: Props) {
 
       <footer className={styles.footer}>
         <div className={styles.inner}>
-          <span>◆ Ripple</span>
-          <span>© {new Date().getFullYear()}</span>
+          <div className={styles.footerLeft}>
+            <span className={styles.footerLogo}>◆ Ripple</span>
+            <span className={styles.footerCopy}>© {new Date().getFullYear()}</span>
+          </div>
+          <nav className={styles.footerNav}>
+            <Link to="/pricing" className={styles.footerNavLink}>Pricing</Link>
+            <button onClick={onSignIn} className={styles.footerNavBtn}>Sign in</button>
+          </nav>
         </div>
       </footer>
     </div>
