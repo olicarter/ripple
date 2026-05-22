@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & type-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build API and web
+        run: npm run build
+
+  e2e:
+    name: Playwright e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Caddy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl
+          curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+            | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+          curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+            | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+          sudo apt-get update
+          sudo apt-get install -y caddy
+          # Stop the systemd unit apt enables — Playwright spawns its own caddy.
+          sudo systemctl stop caddy || true
+          sudo systemctl disable caddy || true
+
+      - name: Start docker services (postgres, electric, redis)
+        run: |
+          docker compose up -d postgres electric redis
+          for i in {1..40}; do
+            if docker compose ps postgres | grep -q '(healthy)' \
+               && docker compose ps redis | grep -q '(healthy)' \
+               && docker compose ps electric | grep -q 'Up'; then
+              echo "Services healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Services failed to become healthy"
+          docker compose ps
+          docker compose logs --tail=50
+          exit 1
+
+      - name: Run database migrations
+        run: npm run db:migrate
+
+      - name: Run Playwright tests
+        env:
+          CI: 'true'
+          NODE_ENV: 'test'
+        run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
