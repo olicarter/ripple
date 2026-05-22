@@ -33,7 +33,7 @@ test.describe('hard quorum', () => {
     // Close the proposal
     await page.request.post(`${API}/api/proposals/${prop.item.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
     await expect(page.getByText('closed', { exact: true })).toBeVisible();
     // Hard quorum not met → result banner says "Failed"
     await expect(page.getByText('Failed — quorum not met', { exact: true })).toBeVisible({ timeout: 10000 });
@@ -69,7 +69,7 @@ test.describe('hard quorum', () => {
     });
     await page.request.post(`${API}/api/proposals/${prop.item.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
     await expect(page.getByText('closed', { exact: true })).toBeVisible();
     // Soft quorum → shows "Not quorate" advisory, not hard "Failed"
     await expect(page.getByText('Not quorate', { exact: true })).toBeVisible({ timeout: 10000 });
@@ -101,7 +101,7 @@ test.describe('hard quorum', () => {
     });
     await page.request.post(`${API}/api/proposals/${prop.item.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
     await expect(page.getByText('closed', { exact: true })).toBeVisible();
     // Quorum met → normal result
     await expect(page.getByText('Proposal passed', { exact: true })).toBeVisible({ timeout: 10000 });

@@ -95,7 +95,7 @@ test.describe('default quorum', () => {
   });
 
   test('admin can set default quorum on org', async ({ page, asAlice }) => {
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await page.fill('#admin-quorum', '60');
     await page.getByRole('button', { name: 'Save defaults' }).click();
     await expect(page.getByText('Defaults saved')).toBeVisible();
@@ -132,7 +132,7 @@ test.describe('default quorum', () => {
     // Close the proposal
     await page.request.post(`${API}/api/proposals/${prop.item.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
     // Wait for Electric to sync the closed status, then tally loads
     await expect(page.getByText('closed', { exact: true })).toBeVisible();
     await expect(page.getByText('Not quorate', { exact: true })).toBeVisible({ timeout: 10000 });

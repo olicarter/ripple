@@ -13,7 +13,7 @@ test.describe('comment moderation', () => {
     const proposal = await createProposal(page.request, topic.id, 'Mod proposal');
     await createComment(page.request, proposal.id, 'Visible comment');
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByRole('button', { name: 'Hide' })).toBeVisible({ timeout: 10000 });
   });
 
@@ -22,7 +22,7 @@ test.describe('comment moderation', () => {
     const proposal = await createProposal(page.request, topic.id, 'Hide proposal');
     await createComment(page.request, proposal.id, 'Offensive content here');
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Offensive content here')).toBeVisible({ timeout: 10000 });
 
     await page.getByRole('button', { name: 'Hide' }).click();
@@ -45,7 +45,7 @@ test.describe('comment moderation', () => {
       data: { reason: 'Test hide' },
     });
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Comment removed by moderator')).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('button', { name: 'Unhide' })).toBeVisible();
 
@@ -71,7 +71,7 @@ test.describe('comment moderation', () => {
       { key: 'ripple_user', value: JSON.stringify(bob) },
     );
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Normal comment')).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('button', { name: 'Hide' })).not.toBeVisible();
   });

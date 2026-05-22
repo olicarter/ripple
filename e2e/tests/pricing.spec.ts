@@ -1,4 +1,4 @@
-import { test, expect, ORG_SLUG } from '../fixtures';
+import { test, expect, API, ORG_SLUG } from '../fixtures';
 
 test.describe('pricing page', () => {
   test('shows both tiers with correct prices', async ({ page }) => {
@@ -58,7 +58,8 @@ test.describe('pricing page', () => {
   test('"Upgrade your org" navigates logged-in user to home', async ({ page, asAlice }) => {
     await page.goto('/pricing');
     await page.getByRole('button', { name: 'Upgrade your org' }).click();
-    await expect(page).toHaveURL('/');
+    // Button navigates to `/`; OrgListPage auto-redirects single-org users to /orgs/:slug.
+    await expect(page).toHaveURL(/\/(orgs\/[^/]+\/?)?$/);
   });
 });
 
@@ -80,19 +81,19 @@ test.describe('upgrade to pro', () => {
 
   test('admin sees Plan & billing section', async ({ page, asAlice }) => {
     await mockBillingStatus(page, 'free');
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByRole('heading', { name: 'Plan & billing' })).toBeVisible();
   });
 
   test('free plan shows current member count and limit', async ({ page, asAlice }) => {
     await mockBillingStatus(page, 'free');
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByText(/1 \/ 15 members/)).toBeVisible();
   });
 
   test('free plan shows Upgrade to Pro button', async ({ page, asAlice }) => {
     await mockBillingStatus(page, 'free');
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByRole('button', { name: 'Upgrade to Pro' })).toBeVisible();
   });
 
@@ -107,7 +108,7 @@ test.describe('upgrade to pro', () => {
     );
     await page.route('https://checkout.stripe.com/**', (route: any) => route.abort());
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     const checkoutRequest = page.waitForRequest(
       (req: any) => req.url().includes('/billing/') && req.url().includes('/checkout') && req.method() === 'POST',
     );
@@ -117,7 +118,7 @@ test.describe('upgrade to pro', () => {
 
   test('pro plan shows Manage billing button, not Upgrade', async ({ page, asAlice }) => {
     await mockBillingStatus(page, 'pro');
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByRole('button', { name: 'Manage billing' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Upgrade to Pro' })).not.toBeVisible();
   });
@@ -133,7 +134,7 @@ test.describe('upgrade to pro', () => {
     );
     await page.route('https://billing.stripe.com/**', (route: any) => route.abort());
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     const portalRequest = page.waitForRequest(
       (req: any) => req.url().includes('/billing/') && req.url().includes('/portal') && req.method() === 'POST',
     );
@@ -143,7 +144,7 @@ test.describe('upgrade to pro', () => {
 
   test('admin billing section links to pricing page', async ({ page, asAlice }) => {
     await mockBillingStatus(page, 'free');
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByRole('link', { name: 'View pricing' })).toBeVisible();
     await page.getByRole('link', { name: 'View pricing' }).click();
     await expect(page).toHaveURL('/pricing');

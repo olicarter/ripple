@@ -25,7 +25,7 @@ test.describe('moderator tools', () => {
 
     // Switch to Bob as moderator
     await switchToModerator(page, bob);
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
 
     await expect(page.getByRole('button', { name: 'Edit', exact: true }).first()).toBeVisible();
   });
@@ -41,7 +41,7 @@ test.describe('moderator tools', () => {
     const prop = await propRes.json();
 
     await switchToModerator(page, bob);
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
 
     await expect(page.getByRole('button', { name: 'Close voting' })).toBeVisible();
     await page.getByRole('button', { name: 'Close voting' }).click();
@@ -107,7 +107,7 @@ test.describe('moderator tools', () => {
 
     // Switch to Bob as moderator
     await switchToModerator(page, bob);
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
 
     // Moderator should see Delete button on Alice's comment
     await expect(page.getByRole('button', { name: 'Delete' }).first()).toBeVisible();

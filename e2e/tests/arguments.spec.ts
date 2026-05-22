@@ -6,7 +6,7 @@ test.describe('for/against arguments', () => {
     const topic = await createTopic(page.request, 'Arg Topic');
     const proposal = await createProposal(page.request, topic.id, 'Arg proposal');
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Arguments (0)')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('No for arguments yet.')).toBeVisible();
     await expect(page.getByText('No against arguments yet.')).toBeVisible();
@@ -16,7 +16,7 @@ test.describe('for/against arguments', () => {
     const topic = await createTopic(page.request, 'For Topic');
     const proposal = await createProposal(page.request, topic.id, 'For proposal');
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Arguments (0)')).toBeVisible({ timeout: 10000 });
 
     await page.locator('input[name="arg-side"][value="for"]').check();
@@ -33,7 +33,7 @@ test.describe('for/against arguments', () => {
     const topic = await createTopic(page.request, 'Against Topic');
     const proposal = await createProposal(page.request, topic.id, 'Against proposal');
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Arguments (0)')).toBeVisible({ timeout: 10000 });
 
     await page.locator('input[name="arg-side"][value="against"]').check();
@@ -49,7 +49,7 @@ test.describe('for/against arguments', () => {
     const topic = await createTopic(page.request, 'Remove Topic');
     const proposal = await createProposal(page.request, topic.id, 'Remove proposal');
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Arguments (0)')).toBeVisible({ timeout: 10000 });
     await page.getByPlaceholder(/Add a for argument/).fill('Argument to delete');
     await page.getByRole('button', { name: 'Add argument' }).click();
@@ -66,7 +66,7 @@ test.describe('for/against arguments', () => {
     const proposal = await createProposal(page.request, topic.id, 'Closed arg proposal');
     await page.request.post(`${API}/api/proposals/${proposal.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText(/Arguments/)).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('button', { name: 'Add argument' })).not.toBeVisible();
   });

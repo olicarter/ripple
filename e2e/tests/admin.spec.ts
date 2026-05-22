@@ -14,12 +14,12 @@ async function switchToBob(page: any, bob: { id: string; name: string; email: st
 
 test.describe('admin panel', () => {
   test('admin sees Admin link in nav', async ({ page, asAlice }) => {
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals`);
     await expect(page.getByRole('link', { name: 'Admin' })).toBeVisible();
   });
 
   test('admin can navigate to admin page', async ({ page, asAlice }) => {
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible();
   });
 
@@ -28,7 +28,7 @@ test.describe('admin panel', () => {
     await page.request.post(`${API}/api/auth/test-setup`, { data: { name: bob.name, email: bob.email } });
     await page.request.patch(`${API}/api/orgs/${ORG_SLUG}/members/${bob.id}`, { data: { role: 'member' } });
     await switchToBob(page, bob);
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals`);
     await expect(page.getByRole('link', { name: 'Admin' })).not.toBeVisible();
   });
 
@@ -36,12 +36,12 @@ test.describe('admin panel', () => {
     await page.request.post(`${API}/api/auth/test-setup`, { data: { name: bob.name, email: bob.email } });
     await page.request.patch(`${API}/api/orgs/${ORG_SLUG}/members/${bob.id}`, { data: { role: 'member' } });
     await switchToBob(page, bob);
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByText('Access denied')).toBeVisible();
   });
 
   test('admin can update org name', async ({ page, asAlice }) => {
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     const nameInput = page.locator('#admin-name');
     await nameInput.fill('Ripple Updated');
     await page.getByRole('button', { name: 'Save changes' }).click();
@@ -49,7 +49,7 @@ test.describe('admin panel', () => {
   });
 
   test('admin can change proposal creation role', async ({ page, asAlice }) => {
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await page.locator('input[name="proposal_creation_role"][value="admin"]').click();
     await expect(page.getByText('Setting saved')).toBeVisible();
   });
@@ -65,7 +65,7 @@ test.describe('admin panel', () => {
     await page.request.patch(`${API}/api/orgs/${ORG_SLUG}/members/${bob.id}`, { data: { role: 'member' } });
     await switchToBob(page, bob);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals`);
     await expect(page.getByRole('button', { name: '+ New proposal' })).not.toBeVisible();
   });
 
@@ -98,10 +98,10 @@ test.describe('admin panel', () => {
   });
 
   test('admin can delete the organisation', async ({ page, asAlice }) => {
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await page.getByRole('button', { name: 'Delete organisation' }).click();
     await page.getByRole('button', { name: 'Yes, delete permanently' }).click();
-    await expect(page).toHaveURL('https://localhost:5174/');
+    await expect(page).toHaveURL(`${API}/`);
   });
 
   test('admin can transfer ownership to a member', async ({ page, asAlice, bob }) => {
@@ -111,7 +111,7 @@ test.describe('admin panel', () => {
     // Restore Alice's session cookie (test-setup returns the session for the given user)
     await page.request.post(`${API}/api/auth/test-setup`, { data: { name: asAlice.name, email: asAlice.email } });
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     // Wait for Bob to appear in the transfer ownership dropdown (Electric sync)
     const transferSection = page.locator('section').filter({ hasText: 'Transfer ownership' });
     const transferSelect = transferSection.locator('select');
@@ -123,7 +123,7 @@ test.describe('admin panel', () => {
     // Alice is demoted — she gets redirected away and shown a toast
     await expect(page.getByText(/Ownership transferred/)).toBeVisible();
     // Alice is now on the proposals page (redirected by the transfer handler)
-    await expect(page).toHaveURL(`https://localhost:5174/orgs/${ORG_SLUG}/proposals`);
+    await expect(page).toHaveURL(`${API}/orgs/${ORG_SLUG}/proposals`);
   });
 
   test('API rejects transfer ownership by a non-admin', async ({ page, asAlice, bob, org }) => {
@@ -158,7 +158,7 @@ test.describe('admin panel', () => {
     });
     const prop = await propRes.json();
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
     await expect(page.getByText('Vote counts are hidden until this proposal closes')).toBeVisible();
     // The tally text should not appear
     await expect(page.getByText(/votes total/)).not.toBeVisible();
@@ -181,7 +181,7 @@ test.describe('admin panel', () => {
     });
     const prop = await propRes.json();
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
     // Should show the Results section with tally (not the hidden message)
     await expect(page.getByText('Vote counts are hidden until this proposal closes')).not.toBeVisible();
     await expect(page.getByText('Results')).toBeVisible();
@@ -208,7 +208,7 @@ test.describe('admin panel', () => {
     // Close the proposal
     await page.request.post(`${API}/api/proposals/${prop.item.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.item.id}`);
     // Closed proposal should always show tally
     await expect(page.getByText('Vote counts are hidden until this proposal closes')).not.toBeVisible();
     await expect(page.getByText('Results')).toBeVisible();

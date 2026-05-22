@@ -7,7 +7,7 @@ test.describe('comment pinning', () => {
     const proposal = await createProposal(page.request, topic.id, 'Pin proposal');
     await createComment(page.request, proposal.id, 'Pinnable comment');
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Pinnable comment')).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('button', { name: 'Pin' }).first()).toBeVisible();
   });
@@ -17,7 +17,7 @@ test.describe('comment pinning', () => {
     const proposal = await createProposal(page.request, topic.id, 'Pin2 proposal');
     await createComment(page.request, proposal.id, 'Key context comment');
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('Key context comment')).toBeVisible({ timeout: 10000 });
     await page.getByRole('button', { name: 'Pin', exact: true }).first().click();
 
@@ -40,7 +40,7 @@ test.describe('comment pinning', () => {
     await page.request.post(`${API}/api/comments/${first.id}/pin`);
 
     // Wait a moment then reload to get Electric sync
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('First comment')).toBeVisible({ timeout: 10000 });
 
     // Pinned comment should appear before non-pinned
@@ -68,7 +68,7 @@ test.describe('comment pinning', () => {
     const comment = await createComment(page.request, proposal.id, 'Will be unpinned');
     await page.request.post(`${API}/api/comments/${comment.id}/pin`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByText('📌 Pinned')).toBeVisible({ timeout: 10000 });
     await page.getByRole('button', { name: 'Unpin' }).click();
 

@@ -41,7 +41,7 @@ test.describe('supermajority threshold', () => {
     });
     await page.request.post(`${API}/api/proposals/${prop.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.id}`);
     await expect(page.getByText('Proposal failed', { exact: true })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(/67% required to pass/)).toBeVisible();
   });
@@ -60,12 +60,12 @@ test.describe('supermajority threshold', () => {
     });
     await page.request.post(`${API}/api/proposals/${prop.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${prop.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${prop.id}`);
     await expect(page.getByText('Proposal passed', { exact: true })).toBeVisible({ timeout: 10000 });
   });
 
   test('create form shows threshold preset buttons', async ({ page, asAlice }) => {
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals`);
     await page.getByRole('button', { name: '+ New proposal' }).click();
     await expect(page.getByRole('button', { name: /Simple majority/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /Two-thirds/ })).toBeVisible();
@@ -74,7 +74,7 @@ test.describe('supermajority threshold', () => {
   });
 
   test('threshold input is always visible and preset buttons update it', async ({ page, asAlice }) => {
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals`);
     await page.getByRole('button', { name: '+ New proposal' }).click();
     await expect(page.getByLabel('Passing threshold')).toBeVisible();
     await page.getByRole('button', { name: /Two-thirds/ }).click();

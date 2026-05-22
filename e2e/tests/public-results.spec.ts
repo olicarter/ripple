@@ -29,7 +29,7 @@ test.describe('public results page', () => {
     await page.request.post(`${API}/api/proposals/${proposal.id}/close`);
 
     // Navigate to public results page (no login needed)
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/results`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/results`);
     await expect(page.getByText('Passed proposal')).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId('result-badge').filter({ hasText: 'Passed' })).toBeVisible();
   });
@@ -41,7 +41,7 @@ test.describe('public results page', () => {
     const proposal = await createProposal(page.request, topic.id, 'Withdrawn proposal');
     await page.request.post(`${API}/api/proposals/${proposal.id}/withdraw`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/results`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/results`);
     await expect(page.getByText('Withdrawn proposal')).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId('result-badge').filter({ hasText: 'Withdrawn' })).toBeVisible();
   });
@@ -52,7 +52,7 @@ test.describe('public results page', () => {
     const topic = await createTopic(page.request, 'Open Topic');
     await createProposal(page.request, topic.id, 'Still open proposal');
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/results`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/results`);
     // Wait for page to load
     await expect(page.getByText(org.name)).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Still open proposal')).not.toBeVisible();
@@ -60,7 +60,7 @@ test.describe('public results page', () => {
 
   test('private org shows 403 error on results page UI', async ({ page, asAlice }) => {
     // org is private by default
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/results`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/results`);
     await expect(page.getByText(/403|private|not have a public/i)).toBeVisible({ timeout: 10000 });
   });
 });

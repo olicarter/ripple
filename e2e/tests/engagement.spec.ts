@@ -24,7 +24,7 @@ test.describe('member engagement score', () => {
       data: { id: '00000000-0000-0000-0000-000000000503', proposal_id: prop.item.id, user_id: asAlice.id, choice: 'yes' },
     });
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/members`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/members`);
     // Alice voted on 1/1 proposals → 100%
     await expect(page.getByText(/100% participation/)).toBeVisible({ timeout: 8000 });
   });
@@ -56,7 +56,7 @@ test.describe('member engagement score', () => {
       data: { id: '00000000-0000-0000-0000-000000000506', proposal_id: prop.item.id, user_id: asAlice.id, choice: 'yes' },
     });
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/members`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/members`);
     // Wait for Alice's row to confirm Electric has synced votes+proposals
     await expect(page.getByText(/100% participation/)).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(/0% participation/).first()).toBeVisible();

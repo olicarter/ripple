@@ -7,7 +7,7 @@ test.describe('proposal outcome tracking', () => {
     const proposal = await createProposal(page.request, topic.id, 'Outcome proposal');
     await page.request.post(`${API}/api/proposals/${proposal.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByTestId('outcome-select')).toBeVisible({ timeout: 10000 });
   });
 
@@ -16,7 +16,7 @@ test.describe('proposal outcome tracking', () => {
     const proposal = await createProposal(page.request, topic.id, 'Impl proposal');
     await page.request.post(`${API}/api/proposals/${proposal.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await page.getByTestId('outcome-select').selectOption('implemented');
 
     await expect(page.getByText('Outcome saved')).toBeVisible({ timeout: 10000 });
@@ -28,7 +28,7 @@ test.describe('proposal outcome tracking', () => {
     const proposal = await createProposal(page.request, topic.id, 'WIP proposal');
     await page.request.post(`${API}/api/proposals/${proposal.id}/close`);
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await page.getByTestId('outcome-select').selectOption('in_progress');
 
     await expect(page.getByText('Outcome saved')).toBeVisible({ timeout: 10000 });
@@ -43,7 +43,7 @@ test.describe('proposal outcome tracking', () => {
       data: { outcome: 'not_implemented' },
     });
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/proposals/${proposal.id}`);
     await expect(page.getByTestId('outcome-badge')).toContainText('Not implemented', { timeout: 10000 });
   });
 

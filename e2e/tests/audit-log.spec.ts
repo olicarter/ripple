@@ -2,7 +2,7 @@ import { test, expect, API, ORG_SLUG } from '../fixtures';
 
 test.describe('audit log', () => {
   test('admin sees audit log section on admin page', async ({ page, asAlice }) => {
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByText('Recent activity')).toBeVisible();
   });
 
@@ -22,7 +22,7 @@ test.describe('audit log', () => {
       },
     });
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByTestId('audit-action').filter({ hasText: 'proposal.created' })).toBeVisible();
   });
 
@@ -31,7 +31,7 @@ test.describe('audit log', () => {
       data: { description: 'Updated via test' },
     });
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     await expect(page.getByTestId('audit-action').filter({ hasText: 'org.settings_changed' })).toBeVisible();
   });
 
@@ -40,7 +40,7 @@ test.describe('audit log', () => {
       data: { description: 'Named actor test' },
     });
 
-    await page.goto(`https://localhost:5174/orgs/${ORG_SLUG}/admin`);
+    await page.goto(`${API}/orgs/${ORG_SLUG}/admin`);
     // Alice should appear as the actor
     await expect(page.getByText('Alice')).toBeVisible();
   });

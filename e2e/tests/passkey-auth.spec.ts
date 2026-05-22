@@ -24,7 +24,7 @@ test.describe('passkey authentication', () => {
     await addVirtualAuthenticator(cdp);
 
     // Open the auth panel from the landing page
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole('banner').getByRole('button', { name: 'Sign in' }).click();
     // Switch to register mode
     await page.getByRole('button', { name: 'Register' }).click();
     await page.getByLabel('Name').fill('Passkey User');
@@ -41,7 +41,7 @@ test.describe('passkey authentication', () => {
     await addVirtualAuthenticator(cdp);
 
     // Register
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole('banner').getByRole('button', { name: 'Sign in' }).click();
     await page.getByRole('button', { name: 'Register' }).click();
     await page.getByLabel('Name').fill('Passkey User');
     await page.getByLabel('Email').fill('passkey@example.com');
@@ -51,7 +51,7 @@ test.describe('passkey authentication', () => {
     // Sign out
     await page.getByRole('button', { name: 'Sign out' }).click();
     // Re-open auth panel from landing page
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole('banner').getByRole('button', { name: 'Sign in' }).click();
     await expect(page.getByRole('button', { name: 'Sign in with passkey' })).toBeVisible();
 
     // Sign in with the stored passkey (virtual authenticator still holds the credential)
@@ -63,7 +63,7 @@ test.describe('passkey authentication', () => {
     // No virtual authenticator — WebAuthn fails with NotSupportedError
     await page.goto('/');
     // Open the auth panel from the landing page
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole('banner').getByRole('button', { name: 'Sign in' }).click();
     // Switch to register mode
     await page.getByRole('button', { name: 'Register' }).click();
     await page.getByLabel('Name').fill('Passkey User');
