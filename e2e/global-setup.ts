@@ -2,7 +2,9 @@
 // This prevents the test suite from silently passing fixture calls against a
 // dev API where /api/auth/test-reset and /api/auth/test-setup are forbidden.
 export default async function globalSetup() {
-  const res = await fetch('http://localhost:3001/api/auth/test-reset', {
+  const probeUrl = process.env.PLAYWRIGHT_API_PROBE
+    ?? 'http://localhost:3001/api/auth/test-reset';
+  const res = await fetch(probeUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: '{}',

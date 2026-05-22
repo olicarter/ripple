@@ -1,6 +1,6 @@
 import { test as base } from '@playwright/test';
 
-export const API = 'https://localhost:5174';
+export const API = process.env.PLAYWRIGHT_API_BASE ?? 'https://localhost:5174';
 const STORAGE_KEY = 'ripple_user';
 
 export const ORG_SLUG = 'ripple-test';
