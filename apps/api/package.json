@@ -22,7 +22,7 @@
     "@slack/web-api": "^7.15.2",
     "@types/cookie-parser": "^1.4.10",
     "@types/express-session": "^1.18.2",
-    "@types/helmet": "^0.0.48",
+    "@types/helmet": "^4.0.0",
     "bullmq": "^5.76.8",
     "connect-redis": "^9.0.0",
     "cookie-parser": "^1.4.7",
