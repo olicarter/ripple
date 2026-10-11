@@ -1,3 +1,9 @@
+{
+    # Only the HTTPS site is served; skipping the HTTP->HTTPS redirect avoids
+    # binding :80, which needs root (fails on CI runners).
+    auto_https disable_redirects
+}
+
 
 localhost:5174 {
     tls internal
