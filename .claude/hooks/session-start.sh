@@ -12,8 +12,12 @@ cd "$CLAUDE_PROJECT_DIR"
 
 log() { echo "[session-start] $*" >&2; }
 
-# --- npm dependencies (install rather than ci, so the cached container is reused)
-npm install --no-audit --no-fund
+# --- npm dependencies. `npm ci` rather than `npm install`, which rewrites the
+# lockfile under newer npm versions; skipped when the cached container already
+# has node_modules matching the lockfile.
+if [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then
+  npm ci --no-audit --no-fund
+fi
 
 # --- Caddy (HTTPS entry point on :5174). GitHub release downloads are blocked
 # by the cloud network proxy; caddyserver.com serves the same binary.
