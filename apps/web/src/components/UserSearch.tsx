@@ -113,7 +113,7 @@ export function UserSearch({
             padding: 0,
           }}
         >
-          {matches.map((u: User, i) => (
+          {matches.map((u: User, i: number) => (
             <li
               key={u.id}
               id={`${listboxId}-option-${i}`}

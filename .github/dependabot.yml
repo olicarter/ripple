@@ -1,7 +1,10 @@
 version: 2
 updates:
+  # npm workspaces share the root package-lock.json, so Dependabot must run from
+  # the root; per-workspace directories bump package.json without the lockfile
+  # and break `npm ci`.
   - package-ecosystem: npm
-    directory: /apps/api
+    directory: /
     schedule:
       interval: monthly
     groups:
@@ -12,16 +15,6 @@ updates:
         patterns:
           - typeorm
           - pg
-      security:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-  - package-ecosystem: npm
-    directory: /apps/web
-    schedule:
-      interval: monthly
-    groups:
       tanstack:
         patterns:
           - "@tanstack/*"
@@ -30,22 +23,17 @@ updates:
           - react
           - react-dom
           - "@types/react*"
+      playwright:
+        patterns:
+          - "@playwright/*"
+          - playwright
       security:
         applies-to: security-updates
         patterns:
           - "*"
 
-  - package-ecosystem: npm
-    directory: /e2e
-    schedule:
-      interval: monthly
-    groups:
-      playwright:
-        patterns:
-          - "@playwright/*"
-          - playwright
-
-  - package-ecosystem: docker
+  # There is no Dockerfile; the images live in docker-compose.yml.
+  - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: monthly
