@@ -1,11 +1,11 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class OrgBranding1000000000062 implements MigrationInterface {
+export class OrgBranding1748600000062 implements MigrationInterface {
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       ALTER TABLE organisations
-      ADD COLUMN primary_color TEXT,
-      ADD COLUMN logo_url TEXT
+      ADD COLUMN IF NOT EXISTS primary_color TEXT,
+      ADD COLUMN IF NOT EXISTS logo_url TEXT
     `);
   }
 

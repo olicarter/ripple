@@ -1,9 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ApiKeys1000000000060 implements MigrationInterface {
+export class ApiKeys1748600000060 implements MigrationInterface {
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      CREATE TABLE api_keys (
+      CREATE TABLE IF NOT EXISTS api_keys (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         organisation_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
         name TEXT NOT NULL,

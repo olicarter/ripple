@@ -1,9 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Webhooks1000000000059 implements MigrationInterface {
+export class Webhooks1748600000059 implements MigrationInterface {
   async up(runner: QueryRunner) {
     await runner.query(`
-      CREATE TABLE webhook_endpoints (
+      CREATE TABLE IF NOT EXISTS webhook_endpoints (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
         url TEXT NOT NULL,

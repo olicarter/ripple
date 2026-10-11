@@ -1,9 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ProposalWatches1000000000058 implements MigrationInterface {
+export class ProposalWatches1748600000058 implements MigrationInterface {
   async up(runner: QueryRunner) {
     await runner.query(`
-      CREATE TABLE proposal_watches (
+      CREATE TABLE IF NOT EXISTS proposal_watches (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         proposal_id UUID NOT NULL REFERENCES proposals(id) ON DELETE CASCADE,
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
