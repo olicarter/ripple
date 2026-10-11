@@ -77,6 +77,10 @@ export function AdminPage() {
   );
   const [savingBoostThreshold, setSavingBoostThreshold] = useState(false);
   const [savingFeatures, setSavingFeatures] = useState(false);
+  // Optimistic copy of org.features: the synced row only updates once the change
+  // round-trips through Electric, which left the checkboxes briefly unresponsive.
+  const [features, setFeatures] = useState<OrgFeatures>(org.features ?? DEFAULT_FEATURES);
+  useEffect(() => { setFeatures(org.features ?? DEFAULT_FEATURES); }, [org.features]);
   const [savingDefaults, setSavingDefaults] = useState(false);
   const [defaultsError, setDefaultsError] = useState('');
 
@@ -2169,18 +2173,21 @@ export function AdminPage() {
         <p className={styles.sectionHint}>Control which features are visible to members. Disabled features are hidden entirely, not locked.</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1rem' }}>
           {FEATURE_DEFS.map(({ key, label, desc }) => {
-            const enabled = (org.features ?? DEFAULT_FEATURES)[key as keyof OrgFeatures] ?? true;
+            const enabled = features[key as keyof OrgFeatures] ?? true;
             return (
               <label key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', cursor: 'pointer', padding: '0.5rem 0.75rem', border: '1px solid #eee', borderRadius: 4, background: enabled ? '#fafafa' : 'transparent' }}>
                 <input
                   type="checkbox"
                   checked={enabled}
                   onChange={async (e) => {
-                    const newFeatures = { ...(org.features ?? DEFAULT_FEATURES), [key]: e.target.checked };
+                    const previous = features;
+                    const newFeatures = { ...features, [key]: e.target.checked } as OrgFeatures;
+                    setFeatures(newFeatures);
                     setSavingFeatures(true);
                     try {
-                      await orgsApi.update(org.slug, { features: newFeatures as OrgFeatures });
+                      await orgsApi.update(org.slug, { features: newFeatures });
                     } catch (err) {
+                      setFeatures(previous);
                       addToast(err instanceof Error ? err.message : 'Failed to update features', 'error');
                     } finally {
                       setSavingFeatures(false);
