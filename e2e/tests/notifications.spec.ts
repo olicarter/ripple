@@ -96,7 +96,7 @@ test.describe('notifications', () => {
     });
 
     // Bob votes (using page.request since it works as admin with user_id in body)
-    await page.request.post(`${API}/api/votes`, {
+    await page.request.post(`${API}/api/votes/test-cast`, {
       data: { id: crypto.randomUUID(), proposal_id: proposal.id, user_id: bob.id, choice: 'yes' },
     });
 

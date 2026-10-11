@@ -126,7 +126,7 @@ test.describe('multiple choice proposals', () => {
     await page.request.post(`${API}/api/votes`, {
       data: { id: randomUUID(), proposal_id: proposalId, user_id: asAlice.id, option_id: optA },
     });
-    await request.post(`${API}/api/votes`, {
+    await request.post(`${API}/api/votes/test-cast`, {
       data: { id: randomUUID(), proposal_id: proposalId, user_id: bob.id, option_id: optB },
     });
 

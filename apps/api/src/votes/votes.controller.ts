@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { VotesService } from './votes.service';
 import { verifyVoteEmailToken } from './vote-email.utils';
@@ -48,11 +48,6 @@ export class VotesController {
     return redirect('success', `&proposal_id=${proposalId}`);
   }
 
-  @Get()
-  findAll() {
-    return this.votesService.findAll();
-  }
-
   @Get('proposal/:proposalId')
   findByProposal(@Param('proposalId') proposalId: string) {
     return this.votesService.findByProposal(proposalId);
@@ -60,20 +55,42 @@ export class VotesController {
 
   @Post()
   @UseGuards(AuthGuard)
-  create(@Body() body: { id: string; proposal_id: string; user_id: string; choice?: VoteChoice | null; option_id?: string | null; reason?: string | null; vote_count?: number }) {
+  create(
+    @Body() body: { id: string; proposal_id: string; user_id?: string; choice?: VoteChoice | null; option_id?: string | null; reason?: string | null; vote_count?: number },
+    @Req() req: AuthenticatedRequest,
+  ) {
+    // Votes are always cast as the signed-in user; user_id is accepted only if it matches.
+    if (body.user_id && body.user_id !== req.user!.id) {
+      throw new ForbiddenException('You can only vote as yourself');
+    }
+    return this.votesService.create({ ...body, user_id: req.user!.id });
+  }
+
+  // Test mode only: cast a vote as any user, for e2e setup (see e2e/helpers.ts).
+  @Post('test-cast')
+  testCast(@Body() body: { id: string; proposal_id: string; user_id: string; choice?: VoteChoice | null; option_id?: string | null }) {
+    if (process.env.NODE_ENV !== 'test') throw new ForbiddenException();
     return this.votesService.create(body);
   }
 
   @Patch(':id')
   @UseGuards(AuthGuard)
-  update(@Param('id') id: string, @Body() body: { choice?: VoteChoice | null; option_id?: string | null; reason?: string | null }) {
+  async update(@Param('id') id: string, @Body() body: { choice?: VoteChoice | null; option_id?: string | null; reason?: string | null }, @Req() req: AuthenticatedRequest) {
+    await this.requireOwnVote(id, req.user!.id);
     return this.votesService.update(id, body);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    await this.requireOwnVote(id, req.user!.id);
     return this.votesService.delete(id);
+  }
+
+  private async requireOwnVote(id: string, userId: string) {
+    const vote = await this.votesService.findOne(id);
+    if (!vote) throw new NotFoundException('Vote not found');
+    if (vote.user_id !== userId) throw new ForbiddenException('You can only change your own vote');
   }
 
   @Post('proposals/:proposalId/approvals')

@@ -44,7 +44,8 @@ export async function createVote(
   userId: string,
   choice: 'yes' | 'no' | 'abstain',
 ) {
-  const res = await request.post(`${API}/api/votes`, {
+  // Test-mode endpoint: lets a test cast a vote for any user (POST /api/votes only votes as the session user).
+  const res = await request.post(`${API}/api/votes/test-cast`, {
     data: { id: crypto.randomUUID(), proposal_id: proposalId, user_id: userId, choice },
   });
   const body = await res.json();

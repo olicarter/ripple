@@ -36,7 +36,7 @@ test.describe('notification types', () => {
     const proposal = await createProposal(page.request, topic.id, 'Voted proposal');
 
     // Bob votes on the proposal
-    await request.post(`${API}/api/votes`, {
+    await request.post(`${API}/api/votes/test-cast`, {
       data: { id: crypto.randomUUID(), proposal_id: proposal.id, user_id: bob.id, choice: 'yes' },
     });
 

@@ -14,6 +14,7 @@ import { useCurrentUser } from '../context';
 import { useToast } from '../components/Toast';
 import { Button } from '../components/ui';
 import { formatDate, formatDatetime, formatRelative } from '../utils/format';
+import { votesArePrivate } from '../utils/votePrivacy';
 import styles from './ProposalDetailPage.module.css';
 
 const TITLE_MAX = 200;
@@ -82,6 +83,9 @@ export function ProposalDetailPage() {
   const [tallyLoading, setTallyLoading] = useState(true);
   const [delegationVote, setDelegationVote] = useState<DelegationVote | null>(null);
   const [delegationChain, setDelegationChain] = useState<DelegationChain | null>(null);
+  // Anonymous proposals' votes aren't synced (see utils/votePrivacy.ts); their
+  // statements come from the API with voter ids removed.
+  const [anonymousVotes, setAnonymousVotes] = useState<Vote[]>([]);
   const [voting, setVoting] = useState(false);
   const [voteError, setVoteError] = useState('');
   const [changingVote, setChangingVote] = useState(false);
@@ -181,6 +185,12 @@ export function ProposalDetailPage() {
   const myVote = currentUser
     ? (allVotes ?? []).find((v: Vote) => v.proposal_id === id && v.user_id === currentUser.id)
     : undefined;
+  const isAnonymousProposal = !!proposal?.anonymous_voting;
+  useEffect(() => {
+    if (!isAnonymousProposal) return;
+    votesApi.listForProposal(id).then(setAnonymousVotes).catch(() => setAnonymousVotes([]));
+  }, [id, isAnonymousProposal, myVote?.id, myVote?.reason]);
+
   const myApprovalVotes = currentUser
     ? (allVotes ?? []).filter((v: Vote) => v.proposal_id === id && v.user_id === currentUser.id)
     : [];
@@ -507,11 +517,15 @@ export function ProposalDetailPage() {
   const delegationSuggestions = (() => {
     if (!currentUser || !isOpen || myVote || delegationChain?.voter) return [];
     const orgMembers = (allMemberships ?? []).filter((m: Membership) => m.organisation_id === org.id && m.user_id !== currentUser.id);
-    const nonDraftCount = (allProposals ?? []).filter((p: Proposal) => p.status !== 'draft' && p.organisation_id === org.id).length;
+    // Only proposals whose votes everyone can see count towards participation.
+    const countedIds = new Set((allProposals ?? [])
+      .filter((p: Proposal) => p.status !== 'draft' && p.organisation_id === org.id && !votesArePrivate(p, org))
+      .map((p: Proposal) => p.id));
+    const nonDraftCount = countedIds.size;
     if (nonDraftCount === 0) return [];
     return orgMembers
       .map((m: Membership) => {
-        const voted = new Set((allVotes ?? []).filter((v: Vote) => v.user_id === m.user_id).map((v: Vote) => v.proposal_id)).size;
+        const voted = new Set((allVotes ?? []).filter((v: Vote) => v.user_id === m.user_id && countedIds.has(v.proposal_id)).map((v: Vote) => v.proposal_id)).size;
         return { userId: m.user_id, pct: Math.round((voted / nonDraftCount) * 100) };
       })
       .filter((s: { userId: string; pct: number }) => s.pct >= 50)
@@ -1956,7 +1970,8 @@ export function ProposalDetailPage() {
 
       {/* Vote statements */}
       {!isDiscussion && !isPetition && org.voting_visibility !== 'hidden' && (() => {
-        const proposalVotes = (allVotes ?? []).filter((v: Vote) => v.proposal_id === id && v.reason);
+        const proposalVotes = (proposal.anonymous_voting ? anonymousVotes : (allVotes ?? []))
+          .filter((v: Vote) => v.proposal_id === id && v.reason);
         if (proposalVotes.length === 0) return null;
         return (
           <div style={{ border: '1px solid #ddd', borderRadius: 6, padding: '1rem 1.25rem', marginBottom: '1.5rem', background: '#fafafa' }}>

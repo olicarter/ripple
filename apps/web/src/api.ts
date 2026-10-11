@@ -793,6 +793,9 @@ export const notificationsApi = {
 };
 
 export const votesApi = {
+  // Anonymous proposals come back with user_id = null.
+  listForProposal: (proposalId: string) =>
+    request<Vote[]>(`/votes/proposal/${proposalId}`),
   create: (data: { id: string; proposal_id: string; user_id: string; choice?: Vote['choice']; option_id?: string | null; reason?: string | null }) =>
     request<MutationResult<Vote>>('/votes', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: { choice?: Vote['choice']; option_id?: string | null; reason?: string | null }) =>

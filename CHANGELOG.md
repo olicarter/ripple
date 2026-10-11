@@ -4,6 +4,17 @@ All notable changes to Ripple are documented in this file.
 
 ## [Unreleased]
 
+### Security
+- Live sync now goes through an authenticated API proxy (`/api/electric/v1/shape`) instead of exposing Electric directly. Secrets (Slack/OIDC/SCIM/invite tokens, Stripe IDs, verification and unsubscribe tokens) are no longer synced, private orgs' data requires membership, emails only reach co-members and drafts only their author
+- Other members' votes on anonymous proposals, and on open proposals in orgs that hide votes until close, are no longer synced to browsers
+- Votes can only be cast, changed or deleted by the voter; previously any signed-in user could vote as, or edit the vote of, anyone
+- Users can only update or delete their own account; `GET /api/users` and `GET /api/orgs/:slug` return public fields only; the unauthenticated `GET /api/votes` listing is removed
+
+### Fixed
+- Fresh databases migrate cleanly (migrations 058–062 ran before the initial schema)
+- Multiple-choice options sync (`proposal_options` was missing from the Electric publication)
+- Admin feature toggles respond immediately instead of waiting for the sync round-trip
+
 ## [0.31.0] — 2026-05-13
 
 ### Added

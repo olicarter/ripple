@@ -23,8 +23,8 @@ export class VotesService {
     private readonly webhooks: WebhooksService,
   ) {}
 
-  findAll(): Promise<Vote[]> {
-    return this.voteRepo.find({ order: { created_at: 'ASC' } });
+  findOne(id: string): Promise<Vote | null> {
+    return this.voteRepo.findOneBy({ id });
   }
 
   async findByProposal(proposalId: string): Promise<Vote[]> {

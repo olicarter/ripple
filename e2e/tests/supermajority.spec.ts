@@ -36,7 +36,7 @@ test.describe('supermajority threshold', () => {
     await page.request.post(`${API}/api/votes`, {
       data: { id: '00000000-0000-0000-0000-000000000703', proposal_id: prop.id, user_id: asAlice.id, choice: 'yes' },
     });
-    await page.request.post(`${API}/api/votes`, {
+    await page.request.post(`${API}/api/votes/test-cast`, {
       data: { id: '00000000-0000-0000-0000-000000000704', proposal_id: prop.id, user_id: bob.id, choice: 'no' },
     });
     await page.request.post(`${API}/api/proposals/${prop.id}/close`);

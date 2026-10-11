@@ -52,8 +52,14 @@ npm workspaces monorepo (Node 22): `apps/api`, `apps/web`.
 - Admin-only org fields come from `GET /api/orgs/:slug/admin-settings`, not the
   synced row. REST responses must not return those secrets either (see
   `toPublicOrg` / `toPublicUser`).
-- Known gap: the votes shape still includes `user_id`/`choice` for anonymous
-  and blind (`voting_visibility = 'hidden'`) proposals, which REST hides.
+- Vote privacy: other members' votes on anonymous proposals, and on open
+  proposals in orgs with `voting_visibility = 'hidden'`, are not synced; the
+  viewer still gets their own. `apps/web/src/utils/votePrivacy.ts` mirrors the
+  rule, so for those proposals take counts/results from the tally API, not the
+  votes collection. The delegation-chain endpoint deliberately still tells a
+  delegator how their delegate voted (it is their vote too).
+- Votes are only cast, changed or deleted as the session user. E2E tests that
+  need someone else's vote use `createVote` (test-mode `POST /api/votes/test-cast`).
 
 ## Ports
 | Service | Port |

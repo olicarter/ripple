@@ -73,6 +73,7 @@ export function resolveShape(
   requestedWhere: string | undefined,
   viewer: ShapeViewer,
   coMemberIds: () => Promise<string[]>,
+  privateVoteProposalIds: (orgId: string) => Promise<string[]>,
 ): Promise<ShapeDefinition> | ShapeDefinition {
   const visibleOrgIds = [...new Set([...viewer.memberOrgIds, ...viewer.publicOrgIds])];
 
@@ -115,6 +116,21 @@ export function resolveShape(
     where += viewer.userId
       ? ` AND (status <> 'draft' OR author_id = '${viewer.userId}')`
       : ` AND status <> 'draft'`;
+  }
+  if (table === 'votes') {
+    // Other people's votes on anonymous proposals, and on open proposals in orgs that
+    // hide votes until close, stay private (as in VotesService.findByProposal). The
+    // viewer always gets their own. The id list is recomputed per request, so when a
+    // proposal closes the shape changes and Electric makes the client refetch.
+    return privateVoteProposalIds(orgId).then((ids) => {
+      if (ids.length === 0) return { where };
+      const publicVotes = `proposal_id NOT IN (${ids.map((id) => `'${id}'`).join(', ')})`;
+      return {
+        where: viewer.userId
+          ? `${where} AND (user_id = '${viewer.userId}' OR ${publicVotes})`
+          : `${where} AND ${publicVotes}`,
+      };
+    });
   }
   return { where };
 }

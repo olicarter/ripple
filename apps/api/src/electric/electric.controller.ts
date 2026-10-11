@@ -33,7 +33,11 @@ export class ElectricController {
 
     let shape;
     try {
-      shape = await resolveShape(query.table, query.where, viewer, () => this.coMemberIds(viewer));
+      shape = await resolveShape(
+        query.table, query.where, viewer,
+        () => this.coMemberIds(viewer),
+        (orgId) => this.privateVoteProposalIds(orgId),
+      );
     } catch (err) {
       if (err instanceof ShapeForbiddenError) throw new ForbiddenException(err.message);
       throw err;
@@ -95,6 +99,17 @@ export class ElectricController {
       memberOrgIds: memberRows.map((r) => r.organisation_id),
       publicOrgIds: publicRows.map((r) => r.id),
     };
+  }
+
+  /** Proposals whose votes only their voters may see (see shape-policy.ts). */
+  private async privateVoteProposalIds(orgId: string): Promise<string[]> {
+    const rows = await this.dataSource.query<Array<{ id: string }>>(
+      `SELECT p.id FROM proposals p JOIN organisations o ON o.id = p.organisation_id
+       WHERE p.organisation_id = $1
+         AND (p.anonymous_voting OR (o.voting_visibility = 'hidden' AND p.status = 'open'))`,
+      [orgId],
+    );
+    return rows.map((r) => r.id);
   }
 
   /** Users who belong (in any status) to an org the viewer is an approved member of. */

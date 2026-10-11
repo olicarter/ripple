@@ -11,6 +11,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Button } from '../components/ui';
 import { proposalOptionsApi, aiApi } from '../api';
 import type { Topic, Proposal, Vote, User, Comment, Membership } from '../api';
+import { votesArePrivate } from '../utils/votePrivacy';
 import styles from './ProposalsPage.module.css';
 
 const TITLE_MAX = 200;
@@ -848,7 +849,8 @@ export function ProposalsPage() {
             const isWithdrawn = p.status === 'withdrawn';
             const isDeliberating = isOpen && !!p.deliberation_ends_at && new Date(p.deliberation_ends_at as string) > new Date();
             const deadline = isOpen && p.closes_at ? formatDeadline(p.closes_at) : null;
-            const result = p.status === 'closed' ? computeResult(yes, no, p.threshold ?? 50) : null;
+            const privateVotes = votesArePrivate(p, org);
+            const result = p.status === 'closed' && !privateVotes ? computeResult(yes, no, p.threshold ?? 50) : null;
 
             const cardCls = [
               styles.cardInner,
@@ -944,14 +946,14 @@ export function ProposalsPage() {
                     </div>
                     {!isDraft && (
                       <div className={styles.cardVotes}>
-                        {(org.voting_visibility !== 'hidden' || !isOpen) ? (
+                        {!privateVotes ? (
                           <>
                             <div className={styles.voteYes}>↑ {yes}</div>
                             <div className={styles.voteNo}>↓ {no}</div>
                             {abstain > 0 && <div className={styles.voteAbstain}>— {abstain}</div>}
                           </>
                         ) : (
-                          <div className={styles.voteHidden}>hidden</div>
+                          <div className={styles.voteHidden}>{p.anonymous_voting ? 'anonymous' : 'hidden'}</div>
                         )}
                         {commentCount > 0 && (
                           <div className={styles.voteComments}>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</div>

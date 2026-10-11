@@ -4,6 +4,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { usersCollection, membershipsCollection } from '../collections';
 import { orgsApi, type User, type Membership, type Proposal, type Vote } from '../api';
 import { formatDate } from '../utils/format';
+import { votesArePrivate } from '../utils/votePrivacy';
 import { useCurrentUser } from '../context';
 import { useOrg } from '../OrgContext';
 import { useToast } from '../components/Toast';
@@ -25,11 +26,16 @@ export function MembersPage() {
   const { data: allProposals } = useLiveQuery(proposalsCollection);
   const { data: allVotes } = useLiveQuery(votesCollection);
 
-  const eligibleProposalCount = (allProposals ?? []).filter(
-    (p: Proposal) => p.status !== 'draft',
-  ).length;
+  // Participation only counts proposals whose votes everyone can see.
+  const countedProposalIds = new Set(
+    (allProposals ?? [])
+      .filter((p: Proposal) => p.status !== 'draft' && !votesArePrivate(p, org))
+      .map((p: Proposal) => p.id),
+  );
+  const eligibleProposalCount = countedProposalIds.size;
   const votesByUser = new Map<string, Set<string>>();
   for (const v of (allVotes ?? []) as Vote[]) {
+    if (!countedProposalIds.has(v.proposal_id)) continue;
     if (!votesByUser.has(v.user_id)) votesByUser.set(v.user_id, new Set());
     votesByUser.get(v.user_id)!.add(v.proposal_id);
   }
