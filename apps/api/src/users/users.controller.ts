@@ -1,20 +1,33 @@
-import { Body, Controller, Delete, Get, Header, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Header, NotFoundException, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { type Response } from 'express';
 import { UsersService } from './users.service';
+import type { User } from './user.entity';
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+
+function toPublicUser(user: User) {
+  const { id, name, avatar_url, bio, created_at } = user;
+  return { id, name, avatar_url, bio, created_at };
+}
+
+function requireSelf(req: AuthenticatedRequest, id: string) {
+  if (req.user!.id !== id) throw new ForbiddenException('You can only modify your own account');
+}
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // Public profile fields only — no email or verification tokens.
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  async findAll() {
+    return (await this.usersService.findAll()).map(toPublicUser);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const user = await this.usersService.findOne(id);
+    if (!user) throw new NotFoundException('User not found');
+    return toPublicUser(user);
   }
 
   @Post()
@@ -25,13 +38,15 @@ export class UsersController {
 
   @Patch(':id')
   @UseGuards(AuthGuard)
-  update(@Param('id') id: string, @Body() body: { name?: string; email?: string; bio?: string | null; avatar_url?: string | null }) {
+  update(@Param('id') id: string, @Body() body: { name?: string; email?: string; bio?: string | null; avatar_url?: string | null }, @Req() req: AuthenticatedRequest) {
+    requireSelf(req, id);
     return this.usersService.update(id, body);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    requireSelf(req, id);
     return this.usersService.delete(id);
   }
 

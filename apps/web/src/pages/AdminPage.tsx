@@ -129,7 +129,7 @@ export function AdminPage() {
   const [connectingSlack, setConnectingSlack] = useState(false);
   const [disconnectingSlack, setDisconnectingSlack] = useState(false);
 
-  const [discordWebhookUrl, setDiscordWebhookUrl] = useState<string>(org.discord_webhook_url ?? '');
+  const [discordWebhookUrl, setDiscordWebhookUrl] = useState<string>('');
   const [savingDiscord, setSavingDiscord] = useState(false);
 
   const [emailFromName, setEmailFromName] = useState<string>(org.email_from_name ?? '');
@@ -144,7 +144,13 @@ export function AdminPage() {
 
   const [scimToken, setScimToken] = useState<string | null>(null);
   const [generatingScim, setGeneratingScim] = useState(false);
-  const [scimEnabled] = useState<boolean>(!!(org as { scim_token?: string | null }).scim_token);
+  const [scimEnabled, setScimEnabled] = useState<boolean>(false);
+  useEffect(() => {
+    orgsApi.getAdminSettings(org.slug).then((settings) => {
+      setDiscordWebhookUrl(settings.discord_webhook_url ?? '');
+      setScimEnabled(settings.scim_enabled);
+    }).catch(() => {});
+  }, [org.slug]);
 
   const [customDomain, setCustomDomain] = useState<string>(org.custom_domain ?? '');
   const [customDomainVerified, setCustomDomainVerified] = useState<boolean>(org.custom_domain_verified ?? false);
@@ -1623,6 +1629,7 @@ export function AdminPage() {
                   try {
                     const result = await orgsApi.generateScimToken(org.slug);
                     setScimToken(result.token);
+                    setScimEnabled(true);
                     addToast('SCIM token generated', 'success');
                   } catch {
                     addToast('Failed to generate SCIM token', 'error');
@@ -1642,6 +1649,7 @@ export function AdminPage() {
                     setGeneratingScim(true);
                     try {
                       await orgsApi.revokeScimToken(org.slug);
+                      setScimEnabled(false);
                       addToast('SCIM token revoked', 'info');
                     } catch {
                       addToast('Failed to revoke SCIM token', 'error');

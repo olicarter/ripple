@@ -26,7 +26,8 @@ services:
     image: electricsql/electric:1.8.1
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/ripple?sslmode=disable
-      ELECTRIC_INSECURE: "true"
+      # Only the API proxy (/api/electric) knows this; browsers never reach Electric directly.
+      ELECTRIC_SECRET: ${ELECTRIC_SECRET:-ripple-dev-electric-secret}
       ELECTRIC_MANUAL_TABLE_PUBLISHING: "true"
     ports:
       - "3000:3000"

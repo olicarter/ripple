@@ -6,7 +6,8 @@ import {
   type Delegation, type Vote, type Comment, type CommentReaction, type Argument, type Veto,
 } from './api';
 
-const shapeUrl = `${window.location.origin}/electric/v1/shape`;
+// Shapes go through the API, which authorises them and picks the columns/rows (see apps/api/src/electric).
+const shapeUrl = `${window.location.origin}/api/electric/v1/shape`;
 
 // Global collections (not org-scoped)
 export const usersCollection = createCollection(

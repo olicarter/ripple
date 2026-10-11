@@ -107,14 +107,22 @@ export function MembersPage() {
   const [generatingToken, setGeneratingToken] = useState(false);
   const [revokingToken, setRevokingToken] = useState(false);
 
-  const inviteUrl = org.invite_token
-    ? `${window.location.origin}/orgs/${org.slug}/join?token=${org.invite_token}`
+  // The invite token is admin-only, so it isn't on the synced org row.
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isAdmin) return;
+    orgsApi.getAdminSettings(org.slug).then((settings) => setInviteToken(settings.invite_token)).catch(() => {});
+  }, [org.slug, isAdmin]);
+
+  const inviteUrl = inviteToken
+    ? `${window.location.origin}/orgs/${org.slug}/join?token=${inviteToken}`
     : null;
 
   const handleGenerateToken = useCallback(async () => {
     setGeneratingToken(true);
     try {
-      await orgsApi.generateInviteToken(org.slug);
+      const result = await orgsApi.generateInviteToken(org.slug);
+      setInviteToken(result.item.invite_token);
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to generate invite link', 'error');
     } finally {
@@ -126,6 +134,7 @@ export function MembersPage() {
     setRevokingToken(true);
     try {
       await orgsApi.revokeInviteToken(org.slug);
+      setInviteToken(null);
       addToast('Invite link revoked', 'info');
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to revoke invite link', 'error');

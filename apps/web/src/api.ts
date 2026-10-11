@@ -87,6 +87,13 @@ export interface User {
   [key: string]: unknown;
 }
 
+// Admin-only org fields, which the synced Organisation row deliberately omits.
+export interface OrgAdminSettings {
+  invite_token: string | null;
+  discord_webhook_url: string | null;
+  scim_enabled: boolean;
+}
+
 export interface Organisation {
   id: string;
   name: string;
@@ -333,6 +340,8 @@ export const orgsApi = {
     request<MutationResult<Membership>>(`/orgs/${slug}/members/${userId}/approve`, { method: 'POST' }),
   rejectMember: (slug: string, userId: string) =>
     request<{ txid: number }>(`/orgs/${slug}/members/${userId}/reject`, { method: 'POST' }),
+  getAdminSettings: (slug: string) =>
+    request<OrgAdminSettings>(`/orgs/${slug}/admin-settings`),
   generateInviteToken: (slug: string) =>
     request<MutationResult<Organisation>>(`/orgs/${slug}/invite-token`, { method: 'POST' }),
   revokeInviteToken: (slug: string) =>

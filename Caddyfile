@@ -6,13 +6,6 @@ localhost:5174 {
         reverse_proxy localhost:3001
     }
 
-    handle /electric/* {
-        uri strip_prefix /electric
-        reverse_proxy localhost:3000 {
-            flush_interval -1
-        }
-    }
-
     handle {
         reverse_proxy localhost:5173
     }

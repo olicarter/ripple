@@ -4,6 +4,20 @@ import { OrganisationsService } from './organisations.service';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
 import type { MemberRole } from './membership.entity';
+import type { Organisation } from './organisation.entity';
+
+// Columns only admins may read (via GET :slug/admin-settings). Also excluded from
+// the Electric organisations shape — see electric/shape-policy.ts.
+const SECRET_ORG_FIELDS = [
+  'invite_token', 'stripe_customer_id', 'stripe_subscription_id', 'slack_bot_token',
+  'oidc_client_secret', 'scim_token', 'discord_webhook_url',
+] as const;
+
+function toPublicOrg(org: Organisation): Omit<Organisation, (typeof SECRET_ORG_FIELDS)[number]> {
+  const copy: Partial<Organisation> = { ...org };
+  for (const field of SECRET_ORG_FIELDS) delete copy[field];
+  return copy as Omit<Organisation, (typeof SECRET_ORG_FIELDS)[number]>;
+}
 
 @Controller('orgs')
 export class OrganisationsController {
@@ -14,8 +28,8 @@ export class OrganisationsController {
 
   @Get()
   @UseGuards(AuthGuard)
-  listForUser(@Req() req: AuthenticatedRequest) {
-    return this.orgsService.findForUser(req.user!.id);
+  async listForUser(@Req() req: AuthenticatedRequest) {
+    return (await this.orgsService.findForUser(req.user!.id)).map(toPublicOrg);
   }
 
   @Post()
@@ -64,8 +78,14 @@ export class OrganisationsController {
   }
 
   @Get(':slug')
-  getBySlug(@Param('slug') slug: string) {
-    return this.orgsService.findBySlug(slug);
+  async getBySlug(@Param('slug') slug: string) {
+    return toPublicOrg(await this.orgsService.findBySlug(slug));
+  }
+
+  @Get(':slug/admin-settings')
+  @UseGuards(AuthGuard)
+  getAdminSettings(@Param('slug') slug: string, @Req() req: AuthenticatedRequest) {
+    return this.orgsService.getAdminSettings(slug, req.user!.id);
   }
 
   @Patch(':slug')

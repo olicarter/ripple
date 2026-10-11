@@ -82,6 +82,16 @@ export class OrganisationsService {
     return org;
   }
 
+  async getAdminSettings(slug: string, userId: string): Promise<{ invite_token: string | null; discord_webhook_url: string | null; scim_enabled: boolean }> {
+    const org = await this.findBySlug(slug);
+    await this.requireRole(org.id, userId, ['admin']);
+    return {
+      invite_token: org.invite_token,
+      discord_webhook_url: org.discord_webhook_url,
+      scim_enabled: !!org.scim_token,
+    };
+  }
+
   async findForUser(userId: string): Promise<Organisation[]> {
     const memberships = await this.memberRepo.find({ where: { user_id: userId, status: 'approved' as MemberStatus } });
     if (memberships.length === 0) return [];
