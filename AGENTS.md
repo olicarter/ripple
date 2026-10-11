@@ -11,12 +11,16 @@ completed features and `CHANGELOG.md` for release history.
 - Local dev: `npm run db:up` (docker compose: postgres, electric, redis), then
   `npm run dev` (Caddy + API + web). If the user says a dev server is already
   running, don't start another.
-- Cloud/remote sessions (claude.ai/code): the container starts fresh, so expect
-  nothing to be running and `node_modules` to be missing (`npm ci` first).
-  The Docker daemon has been unavailable and Caddy not installed there, so the
-  compose stack (including ElectricSQL) and the HTTPS proxy on :5174 may not be
-  startable. Native `postgres` 16 and `redis-server` binaries are present.
-  `npm run build` (type-check + build) needs only `node_modules`.
+- Cloud/remote sessions (claude.ai/code): the container starts fresh with
+  nothing running. `.claude/hooks/session-start.sh` sets it up: `npm ci`,
+  installs Caddy, starts `dockerd` (installed but not running by default),
+  `docker compose up` for postgres/electric/redis, runs migrations and exports
+  `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. If it hasn't run (e.g. it isn't registered
+  as a SessionStart hook in `.claude/settings.json`), run it yourself with
+  `CLAUDE_CODE_REMOTE=true CLAUDE_PROJECT_DIR=$PWD .claude/hooks/session-start.sh`.
+  It does not start the app: run `npm run dev` (or the API/web/Caddy separately).
+  Docker Hub can rate-limit image pulls (HTTP 429); retry `npm run db:up` later.
+  Don't reinstall `node_modules` while the app or tests are running.
 
 ## Tech stack
 npm workspaces monorepo (Node 22): `apps/api`, `apps/web`.
@@ -29,7 +33,27 @@ npm workspaces monorepo (Node 22): `apps/api`, `apps/web`.
   ElectricSQL), i18next (`src/locales`), CSS modules.
 - **Auth**: WebAuthn passkeys (`@simplewebauthn`), magic links, email verification.
 - **Proxy**: Caddy (`Caddyfile`) serves `https://localhost:5174`:
-  `/api/*` -> API :3001, `/electric/*` -> Electric :3000, everything else -> Vite :5173.
+  `/api/*` -> API :3001, everything else -> Vite :5173.
+
+## Electric sync and data exposure
+- Browsers never reach Electric directly. The web app requests shapes from
+  `/api/electric/v1/shape`; `apps/api/src/electric` authorises them from the
+  session and sets `table`, `columns` and `where` server-side, then adds
+  `ELECTRIC_SECRET` (Electric rejects requests without it).
+- `electric/shape-policy.ts` holds the rules: allowlisted tables and column
+  allowlists (secrets such as invite/SCIM/Slack/OIDC tokens, Stripe IDs,
+  verification and unsubscribe tokens are excluded), org-scoped tables require
+  `where=organisation_id = '<uuid>'` and membership or a public org, users'
+  emails go only to co-members, drafts only to their author.
+- New column on a synced table: add it to the allowlist if the browser needs
+  it (it is hidden until you do). New synced table: add it to the publication,
+  set `REPLICA IDENTITY FULL` (see migrations 081/082) and add it to
+  `shape-policy.ts`.
+- Admin-only org fields come from `GET /api/orgs/:slug/admin-settings`, not the
+  synced row. REST responses must not return those secrets either (see
+  `toPublicOrg` / `toPublicUser`).
+- Known gap: the votes shape still includes `user_id`/`choice` for anonymous
+  and blind (`voting_visibility = 'hidden'`) proposals, which REST hides.
 
 ## Ports
 | Service | Port |
@@ -37,7 +61,7 @@ npm workspaces monorepo (Node 22): `apps/api`, `apps/web`.
 | Caddy (app entry point) | 5174 (HTTPS, `tls internal`) |
 | Vite | 5173 |
 | API | 3001 (`API_PORT`), all routes under `/api` |
-| ElectricSQL | 3000 |
+| ElectricSQL (pinned image; API-only, needs `ELECTRIC_SECRET`) | 3000 |
 | Postgres / replica (optional `replica` profile) | 5432 / 5433 |
 | Redis | 6379 |
 | Parallel test instance (`playwright.config.test.ts`) | Caddy 5274 -> API 3101 |
@@ -46,9 +70,9 @@ npm workspaces monorepo (Node 22): `apps/api`, `apps/web`.
 - Migrations live in `apps/api/src/db/migrations` (numbered `NNN-name.ts`) and
   run automatically on API boot (`migrationsRun: true`, `synchronize: false`);
   `npm run db:migrate` runs them manually. Add a new numbered migration for
-  every schema change; never rely on synchronize.
-- Tables published to Electric must be added to the publication (see
-  `004-electric-publication.ts` and `docker/postgres-init.sql`).
+  every schema change; never rely on synchronize. TypeORM orders migrations by
+  the timestamp at the end of the class name, so use the next number in the
+  current series (`<Name>1748600000NNN`), never a smaller timestamp.
 - Seed data: `npm run seed --workspace=apps/api`.
 - Entities are colocated with their modules (`*.entity.ts`); main tables include
   users, credentials, organisations, memberships, org_invites, topics, proposals
@@ -59,13 +83,15 @@ npm workspaces monorepo (Node 22): `apps/api`, `apps/web`.
 ## Environment
 - `.env` is **not** loaded automatically (no dotenv); the API falls back to
   hard-coded local defaults, e.g. `DATABASE_URL=postgresql://postgres:password@localhost:5432/ripple`,
-  `REDIS_URL=redis://localhost:6379`, `RP_ID=localhost`. Export variables in
-  the shell to override.
+  `ELECTRIC_SECRET=ripple-dev-electric-secret` (must match docker-compose),
+  `RP_ID=localhost`. BullMQ uses `redis://localhost:6379` by default; sessions
+  use Redis only if `REDIS_URL` is set (in-memory otherwise). Export variables
+  in the shell to override.
 - Optional integration keys (Resend, Stripe, Slack, Anthropic, etc.) are listed in
   `ROADMAP.md`; features degrade or are disabled without them.
 
 ## API modules (`apps/api/src`)
-Controllers (prefix `/api`): `auth`, `users`, `orgs`, `orgs/:slug/api-keys`,
+Controllers (prefix `/api`): `auth`, `users`, `orgs`, `electric`, `orgs/:slug/api-keys`,
 `orgs/:slug/webhooks`, `topics`, `proposals`, `votes`, `delegations`,
 `notifications`, `billing`, `slack`, `ai`, `scim/v2`. Comments, arguments,
 endorsements and vetoes have their own modules. Background jobs are in `jobs/`.
@@ -82,8 +108,14 @@ Electric-backed collections are in `collections.ts`; REST calls in `api.ts`.
   `npm run test:e2e` starts its own API (`NODE_ENV=test`), Vite and Caddy, but
   requires Postgres, Electric and Redis already up. `e2e/global-setup.ts` fails
   fast if the API on :3001 isn't in test mode, so stop a dev API first, or use
-  `npx playwright test --config=playwright.config.test.ts` to run alongside it.
-- In cloud sessions Chromium is preinstalled; don't run `playwright install`.
+  `npx playwright test --config=playwright.config.test.ts` to run alongside it
+  (test API on :3101, Caddy on :5274; it sets its own `PLAYWRIGHT_API_*` vars).
+- In cloud sessions don't run `playwright install`: the preinstalled Chromium
+  doesn't match this Playwright version, so set
+  `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium` (the hook does).
+- The full suite (~450 tests) takes a while; run single specs while iterating.
 - Load tests: `load-tests/` (see its README).
+- Type-check/build: `npm run build` (there is no linter or unit-test runner).
 - CI (`.github/workflows/ci.yml`): `npm run build`, then the Playwright suite
-  against the docker compose stack.
+  against the docker compose stack. Dependabot runs from the repo root
+  (`.github/dependabot.yml`) so the shared `package-lock.json` stays in sync.
