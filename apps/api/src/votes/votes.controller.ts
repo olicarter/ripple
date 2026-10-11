@@ -3,11 +3,15 @@ import type { Response } from 'express';
 import { VotesService } from './votes.service';
 import { verifyVoteEmailToken } from './vote-email.utils';
 import { VoteChoice } from './vote.entity';
-import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { AuthGuard, OptionalAuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { AccessService } from '../access/access.service';
 
 @Controller('votes')
 export class VotesController {
-  constructor(private readonly votesService: VotesService) {}
+  constructor(
+    private readonly votesService: VotesService,
+    private readonly access: AccessService,
+  ) {}
 
   @Get('by-email')
   async voteByEmail(
@@ -49,13 +53,15 @@ export class VotesController {
   }
 
   @Get('proposal/:proposalId')
-  findByProposal(@Param('proposalId') proposalId: string) {
+  @UseGuards(OptionalAuthGuard)
+  async findByProposal(@Param('proposalId') proposalId: string, @Req() req: AuthenticatedRequest) {
+    await this.access.assertCanViewProposal(proposalId, req.user?.id);
     return this.votesService.findByProposal(proposalId);
   }
 
   @Post()
   @UseGuards(AuthGuard)
-  create(
+  async create(
     @Body() body: { id: string; proposal_id: string; user_id?: string; choice?: VoteChoice | null; option_id?: string | null; reason?: string | null; vote_count?: number },
     @Req() req: AuthenticatedRequest,
   ) {
@@ -63,6 +69,7 @@ export class VotesController {
     if (body.user_id && body.user_id !== req.user!.id) {
       throw new ForbiddenException('You can only vote as yourself');
     }
+    await this.access.assertCanActOnProposal(body.proposal_id, req.user!.id);
     return this.votesService.create({ ...body, user_id: req.user!.id });
   }
 
@@ -95,31 +102,34 @@ export class VotesController {
 
   @Post('proposals/:proposalId/approvals')
   @UseGuards(AuthGuard)
-  setApprovals(
+  async setApprovals(
     @Param('proposalId') proposalId: string,
     @Body() body: { option_ids: string[] },
     @Req() req: AuthenticatedRequest,
   ) {
+    await this.access.assertCanActOnProposal(proposalId, req.user!.id);
     return this.votesService.setApprovals(proposalId, req.user!.id, body.option_ids);
   }
 
   @Post('proposals/:proposalId/scores')
   @UseGuards(AuthGuard)
-  setScores(
+  async setScores(
     @Param('proposalId') proposalId: string,
     @Body() body: { scores: Array<{ option_id: string; score: number }> },
     @Req() req: AuthenticatedRequest,
   ) {
+    await this.access.assertCanActOnProposal(proposalId, req.user!.id);
     return this.votesService.setScores(proposalId, req.user!.id, body.scores);
   }
 
   @Post('proposals/:proposalId/rankings')
   @UseGuards(AuthGuard)
-  setRankings(
+  async setRankings(
     @Param('proposalId') proposalId: string,
     @Body() body: { option_ids: string[] },
     @Req() req: AuthenticatedRequest,
   ) {
+    await this.access.assertCanActOnProposal(proposalId, req.user!.id);
     return this.votesService.setRankings(proposalId, req.user!.id, body.option_ids);
   }
 }

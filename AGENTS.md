@@ -6,7 +6,7 @@ comments, and admin/billing features. See `ROADMAP.md` for planned and
 completed features and `CHANGELOG.md` for release history.
 
 ## Running services
-- Do not assume anything is running. Check first (e.g. `curl -s localhost:3001/api/users`,
+- Do not assume anything is running. Check first (e.g. `curl -s localhost:3001/api/health`,
   `pg_isready -h localhost`) before starting or relying on a service.
 - Local dev: `npm run db:up` (docker compose: postgres, electric, redis), then
   `npm run dev` (Caddy + API + web). If the user says a dev server is already

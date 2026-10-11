@@ -2,7 +2,8 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, Res, Use
 import type { Response } from 'express';
 import { OrganisationsService } from './organisations.service';
 import { AuditLogService } from '../audit-log/audit-log.service';
-import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { AuthGuard, OptionalAuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { AccessService } from '../access/access.service';
 import type { MemberRole } from './membership.entity';
 import type { Organisation } from './organisation.entity';
 
@@ -24,6 +25,7 @@ export class OrganisationsController {
   constructor(
     private readonly orgsService: OrganisationsService,
     private readonly auditLog: AuditLogService,
+    private readonly access: AccessService,
   ) {}
 
   @Get()
@@ -117,14 +119,17 @@ export class OrganisationsController {
   // --- Members ---
 
   @Get(':slug/members')
-  async listMembers(@Param('slug') slug: string) {
-    const org = await this.orgsService.findBySlug(slug);
-    return this.orgsService.listMembers(org.id);
+  @UseGuards(OptionalAuthGuard)
+  async listMembers(@Param('slug') slug: string, @Req() req: AuthenticatedRequest) {
+    const orgId = await this.access.assertCanViewOrgSlug(slug, req.user?.id);
+    // unsubscribe_token is a per-member secret (it unsubscribes without signing in).
+    return (await this.orgsService.listMembers(orgId)).map(({ unsubscribe_token: _secret, ...member }) => member);
   }
 
   @Get(':slug/members/search')
   @UseGuards(AuthGuard)
-  searchMembers(@Param('slug') slug: string, @Query('q') q = '') {
+  async searchMembers(@Param('slug') slug: string, @Req() req: AuthenticatedRequest, @Query('q') q = '') {
+    await this.access.assertRoleForSlug(slug, req.user!.id, 'observer');
     return this.orgsService.searchMembers(slug, q);
   }
 
@@ -339,7 +344,8 @@ export class OrganisationsController {
 
   @Get(':slug/delegation-weights')
   @UseGuards(AuthGuard)
-  getDelegationWeights(@Param('slug') slug: string) {
+  async getDelegationWeights(@Param('slug') slug: string, @Req() req: AuthenticatedRequest) {
+    await this.access.assertRoleForSlug(slug, req.user!.id, 'observer');
     return this.orgsService.getDelegationWeights(slug);
   }
 

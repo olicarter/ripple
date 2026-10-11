@@ -119,15 +119,15 @@ test('cannot vote on a withdrawn proposal', async ({ page, asAlice }) => {
 
 // ── Circular delegation detection ───────────────────────────────────────────
 
-test('API rejects a delegation that would create a cycle', async ({ page, asAlice, bob }) => {
+test('API rejects a delegation that would create a cycle', async ({ page, request, asAlice, bob }) => {
   // Alice → Bob
   const res1 = await page.request.post(`${API}/api/delegations`, {
     data: { id: crypto.randomUUID(), organisation_id: TEST_ORG_ID, delegator_id: asAlice.id, delegate_id: bob.id },
   });
   expect(res1.status()).toBe(201);
 
-  // Bob → Alice (would create a cycle)
-  const res2 = await page.request.post(`${API}/api/delegations`, {
+  // Bob → Alice (would create a cycle); `request` is signed in as Bob
+  const res2 = await request.post(`${API}/api/delegations`, {
     data: { id: crypto.randomUUID(), organisation_id: TEST_ORG_ID, delegator_id: bob.id, delegate_id: asAlice.id },
   });
   expect(res2.status()).toBe(400);

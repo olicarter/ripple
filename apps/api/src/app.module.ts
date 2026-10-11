@@ -51,6 +51,8 @@ import { ProposalBoost } from './proposals/proposal-boost.entity';
 import { Prediction } from './proposals/prediction.entity';
 import { AiModule } from './ai/ai.module';
 import { ElectricModule } from './electric/electric.module';
+import { AccessModule } from './access/access.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -102,6 +104,8 @@ import { ElectricModule } from './electric/electric.module';
     ScimModule,
     AiModule,
     ElectricModule,
+    AccessModule,
+    HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

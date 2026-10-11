@@ -1,14 +1,21 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { TopicsService } from './topics.service';
-import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { AuthGuard, OptionalAuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { AccessService } from '../access/access.service';
 
 @Controller('topics')
 export class TopicsController {
-  constructor(private readonly topicsService: TopicsService) {}
+  constructor(
+    private readonly topicsService: TopicsService,
+    private readonly access: AccessService,
+  ) {}
 
   @Get()
-  findAll() {
-    return this.topicsService.findAll();
+  @UseGuards(OptionalAuthGuard)
+  async findByOrg(@Query('org') orgId: string, @Req() req: AuthenticatedRequest) {
+    if (!orgId) throw new BadRequestException('The org query parameter is required');
+    await this.access.assertCanViewOrg(orgId, req.user?.id);
+    return this.topicsService.findByOrg(orgId);
   }
 
   @Post()

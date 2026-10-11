@@ -2,14 +2,19 @@ import { Body, Controller, Get, Headers, Param, Post, RawBodyRequest, Req, UseGu
 import type { Request } from 'express';
 import { BillingService } from './billing.service';
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { AccessService } from '../access/access.service';
 
 @Controller('billing')
 export class BillingController {
-  constructor(private readonly billingService: BillingService) {}
+  constructor(
+    private readonly billingService: BillingService,
+    private readonly access: AccessService,
+  ) {}
 
   @Get(':orgId/status')
   @UseGuards(AuthGuard)
-  getStatus(@Param('orgId') orgId: string) {
+  async getStatus(@Param('orgId') orgId: string, @Req() req: AuthenticatedRequest) {
+    await this.access.assertRole(orgId, req.user!.id, 'observer');
     return this.billingService.getStatus(orgId);
   }
 

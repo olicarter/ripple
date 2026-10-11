@@ -28,6 +28,25 @@ jobs:
       - name: Build API and web
         run: npm run build
 
+  docker:
+    name: Production images
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API image
+        run: docker build --target api -t ripple-api .
+
+      - name: Build web image
+        run: docker build --target web -t ripple-web .
+
+      - name: API image refuses to start without production secrets
+        run: |
+          if docker run --rm -e NODE_ENV=production ripple-api; then
+            echo "expected the API to exit with an error"; exit 1
+          fi
+
   e2e:
     name: Playwright e2e
     runs-on: ubuntu-latest

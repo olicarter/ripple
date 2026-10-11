@@ -1,14 +1,19 @@
 import { Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { EndorsementsService } from './endorsements.service';
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { AccessService } from '../access/access.service';
 
 @Controller()
 export class EndorsementsController {
-  constructor(private readonly endorsementsService: EndorsementsService) {}
+  constructor(
+    private readonly endorsementsService: EndorsementsService,
+    private readonly access: AccessService,
+  ) {}
 
   @Get('proposals/:id/endorsements')
   @UseGuards(AuthGuard)
-  list(@Param('id') proposalId: string) {
+  async list(@Param('id') proposalId: string, @Req() req: AuthenticatedRequest) {
+    await this.access.assertCanViewProposal(proposalId, req.user!.id);
     return this.endorsementsService.findByProposal(proposalId);
   }
 

@@ -10,6 +10,7 @@ declare module 'express-session' {
     oidcState?: string;
     oidcCodeVerifier?: string;
     oidcOrgSlug?: string;
+    slackOAuth?: { state: string; orgSlug: string };
   }
 }
 
@@ -49,5 +50,21 @@ export class AuthGuard implements CanActivate {
     }
 
     throw new UnauthorizedException('Authentication required');
+  }
+}
+
+/**
+ * Like AuthGuard, but lets anonymous requests through (req.user stays unset).
+ * For endpoints that public orgs expose to everyone and private orgs to members.
+ */
+@Injectable()
+export class OptionalAuthGuard extends AuthGuard {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    try {
+      return await super.canActivate(context);
+    } catch (err) {
+      if (err instanceof UnauthorizedException) return true;
+      throw err;
+    }
   }
 }

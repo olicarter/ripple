@@ -35,7 +35,7 @@ export default defineConfig({
   webServer: [
     {
       command: 'NODE_ENV=test API_PORT=3101 ORIGIN=https://localhost:5274,https://localhost:5174,http://localhost:5173 npm run dev --workspace=apps/api',
-      url: 'http://localhost:3101/api/users',
+      url: 'http://localhost:3101/api/health',
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },

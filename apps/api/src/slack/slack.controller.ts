@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -29,24 +30,27 @@ export class SlackController {
     const org = await this.orgRepo.findOneByOrFail({ slug: orgSlug });
     await this.requireAdmin(org.id, req.user!.id);
     const redirectUri = `${process.env.APP_URL ?? 'https://localhost:5173'}/api/slack/callback`;
-    const state = Buffer.from(JSON.stringify({ orgSlug, userId: req.user!.id })).toString('base64url');
+    // Random state remembered in the admin's session, so the callback can only
+    // connect the org this admin started connecting.
+    const state = randomBytes(24).toString('base64url');
+    req.session!.slackOAuth = { state, orgSlug };
     const scopes = 'chat:write,channels:read,groups:read,incoming-webhook';
     const url = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
     return { url };
   }
 
   @Get('callback')
-  async handleCallback(@Query('code') code: string, @Query('state') state: string) {
+  async handleCallback(@Query('code') code: string, @Query('state') state: string, @Req() req: AuthenticatedRequest) {
     if (!code) throw new BadRequestException('Missing code');
-    let orgSlug = '';
-    try {
-      const decoded = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
-      orgSlug = decoded.orgSlug;
-    } catch {
-      throw new BadRequestException('Invalid state');
-    }
+    const pending = req.session?.slackOAuth;
+    if (!pending || !state || pending.state !== state) throw new BadRequestException('Invalid state');
+    delete req.session!.slackOAuth;
+    const orgSlug = pending.orgSlug;
 
     const org = await this.orgRepo.findOneByOrFail({ slug: orgSlug });
+    const userId = req.session?.userId;
+    if (!userId) throw new BadRequestException('Not signed in');
+    await this.requireAdmin(org.id, userId);
     const redirectUri = `${process.env.APP_URL ?? 'https://localhost:5173'}/api/slack/callback`;
     const data = await this.slackService.exchangeOAuthCode(code, redirectUri);
 

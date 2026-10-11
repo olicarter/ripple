@@ -4,6 +4,11 @@ import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simp
 import { AuthService } from './auth.service';
 import { OidcService } from './oidc.service';
 import { AuthGuard, type AuthenticatedRequest } from './auth.guard';
+import { Throttle } from '@nestjs/throttler';
+
+// Endpoints that start a sign-in or send email get a much lower per-IP limit than
+// the global one, to slow credential stuffing and email bombing.
+const AUTH_THROTTLE = { default: { limit: process.env.NODE_ENV === 'test' ? 10_000 : 10, ttl: 60_000 } };
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Organisation } from '../organisations/organisation.entity';
@@ -23,21 +28,25 @@ export class AuthController {
   ) {}
 
   @Post('register/begin')
+  @Throttle(AUTH_THROTTLE)
   registerBegin(@Body() body: { name: string; email: string }) {
     return this.authService.registerBegin(body);
   }
 
   @Post('register/finish')
+  @Throttle(AUTH_THROTTLE)
   registerFinish(@Body() body: RegistrationResponseJSON, @Req() req: Request) {
     return this.authService.registerFinish(body, req);
   }
 
   @Post('login/begin')
+  @Throttle(AUTH_THROTTLE)
   loginBegin() {
     return this.authService.loginBegin();
   }
 
   @Post('login/finish')
+  @Throttle(AUTH_THROTTLE)
   loginFinish(@Body() body: AuthenticationResponseJSON, @Req() req: Request) {
     return this.authService.loginFinish(body, req);
   }
@@ -67,16 +76,19 @@ export class AuthController {
   }
 
   @Post('magic/begin')
+  @Throttle(AUTH_THROTTLE)
   magicLinkBegin(@Body() body: { email: string }) {
     return this.authService.magicLinkBegin(body.email);
   }
 
   @Post('magic/verify')
+  @Throttle(AUTH_THROTTLE)
   magicLinkVerify(@Query('token') token: string, @Req() req: Request) {
     return this.authService.magicLinkVerify(token, req);
   }
 
   @Post('verify-email')
+  @Throttle(AUTH_THROTTLE)
   verifyEmail(@Body() body: { token: string }) {
     return this.authService.verifyEmail(body.token);
   }

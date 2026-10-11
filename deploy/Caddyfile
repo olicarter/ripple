@@ -1,0 +1,28 @@
+# Production entry point. Caddy obtains and renews TLS certificates for
+# {$DOMAIN} automatically (ports 80 and 443 must be reachable).
+{$DOMAIN} {
+    encode zstd gzip
+
+    handle /api/* {
+        # Long-polling Electric shapes stream through /api/electric; don't buffer them.
+        reverse_proxy api:3001 {
+            flush_interval -1
+        }
+    }
+
+    handle {
+        root * /srv
+        # Fingerprinted assets can be cached forever; index.html must not be.
+        @assets path /assets/*
+        header @assets Cache-Control "public, max-age=31536000, immutable"
+        try_files {path} /index.html
+        file_server
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+}

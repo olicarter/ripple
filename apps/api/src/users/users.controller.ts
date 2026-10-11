@@ -18,11 +18,6 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   // Public profile fields only — no email or verification tokens.
-  @Get()
-  async findAll() {
-    return (await this.usersService.findAll()).map(toPublicUser);
-  }
-
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const user = await this.usersService.findOne(id);

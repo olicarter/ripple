@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, LessThanOrEqual, Repository } from 'typeorm';
+import { DataSource, LessThanOrEqual, Not, Repository } from 'typeorm';
 import { randomUUID, createHmac, createHash } from 'crypto';
 import { ImpactLevel, Proposal, ProposalStatus } from './proposal.entity';
 import { ProposalOption } from './proposal-option.entity';
@@ -76,10 +76,6 @@ export class ProposalsService {
     private readonly discord: DiscordService,
   ) {}
 
-  findAll(): Promise<Proposal[]> {
-    return this.proposalRepo.find({ order: { created_at: 'DESC' } });
-  }
-
   findByOrg(organisationId: string): Promise<Proposal[]> {
     return this.proposalRepo.find({ where: { organisation_id: organisationId }, order: { created_at: 'DESC' } });
   }
@@ -92,6 +88,8 @@ export class ProposalsService {
     sort?: string;
     page?: number;
     pageSize?: number;
+    /** Drafts are only listed for their author. */
+    viewerId?: string | null;
   }): Promise<{ items: Proposal[]; total: number; page: number; pageSize: number }> {
     const page = Math.max(1, params.page ?? 1);
     const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
@@ -108,8 +106,24 @@ export class ProposalsService {
       : params.sort === 'oldest' ? { created_at: 'ASC' }
       : { created_at: 'DESC' };
 
+    const viewerId = params.viewerId ?? null;
+    let visible: Record<string, unknown> | Record<string, unknown>[];
+    if (params.status === 'draft') {
+      if (!viewerId || (params.author_id && params.author_id !== viewerId)) {
+        return { items: [], total: 0, page, pageSize };
+      }
+      visible = { ...where, author_id: viewerId };
+    } else if (params.status) {
+      visible = where;
+    } else {
+      visible = [{ ...where, status: Not('draft') }];
+      if (viewerId && (!params.author_id || params.author_id === viewerId)) {
+        visible.push({ ...where, status: 'draft', author_id: viewerId });
+      }
+    }
+
     const [items, total] = await this.proposalRepo.findAndCount({
-      where: where as any,
+      where: visible as any,
       order: order as any,
       skip,
       take: pageSize,
@@ -993,6 +1007,10 @@ export class ProposalsService {
 
   async exportVotesCsv(proposalId: string): Promise<string> {
     const proposal = await this.proposalRepo.findOneByOrFail({ id: proposalId });
+    if (proposal.status === 'open') {
+      const org = await this.dataSource.getRepository(Organisation).findOneBy({ id: proposal.organisation_id });
+      if (org?.voting_visibility === 'hidden') throw new ForbiddenException('Votes are hidden until this proposal closes');
+    }
     const votes = await this.dataSource.getRepository(Vote).find({ where: { proposal_id: proposalId } });
     const isAnon = proposal.anonymous_voting;
 

@@ -31,7 +31,7 @@ export default defineConfig({
   webServer: [
     {
       command: 'NODE_ENV=test npm run dev --workspace=apps/api',
-      url: 'http://localhost:3001/api/users',
+      url: 'http://localhost:3001/api/health',
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
     },

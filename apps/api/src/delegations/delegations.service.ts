@@ -15,6 +15,15 @@ export class DelegationsService {
     private readonly notifications: NotificationsService,
   ) {}
 
+  findOne(id: string): Promise<Delegation | null> {
+    return this.delegationRepo.findOneBy({ id });
+  }
+
+  async topicBelongsToOrg(topicId: string, orgId: string): Promise<boolean> {
+    const [row] = await this.dataSource.query(`SELECT 1 FROM topics WHERE id = $1 AND organisation_id = $2`, [topicId, orgId]);
+    return !!row;
+  }
+
   findAll(): Promise<Delegation[]> {
     return this.delegationRepo.find({ order: { created_at: 'ASC' } });
   }

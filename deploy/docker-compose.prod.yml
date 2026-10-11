@@ -1,0 +1,103 @@
+# Single-host production stack. See deploy/README.md.
+#   cp deploy/.env.example deploy/.env   # then fill in every value
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
+name: ripple-prod
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ripple
+      POSTGRES_USER: ripple
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    # Electric streams changes over logical replication.
+    command: ["postgres", "-c", "wal_level=logical"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../docker/postgres-init.sql:/docker-entrypoint-initdb.d/01-electric-publication.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ripple -d ripple"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  electric:
+    image: electricsql/electric:1.8.1
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://ripple:${POSTGRES_PASSWORD}@postgres:5432/ripple?sslmode=disable
+      ELECTRIC_SECRET: ${ELECTRIC_SECRET:?set ELECTRIC_SECRET}
+      ELECTRIC_MANUAL_TABLE_PUBLISHING: "true"
+    volumes:
+      - electricdata:/app/persistent
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Not published: only the API talks to Electric.
+
+  api:
+    build:
+      context: ..
+      target: api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      API_PORT: "3001"
+      DATABASE_URL: postgresql://ripple:${POSTGRES_PASSWORD}@postgres:5432/ripple
+      REDIS_URL: redis://redis:6379
+      ELECTRIC_URL: http://electric:3000
+      APP_URL: https://${DOMAIN}
+      API_URL: https://${DOMAIN}
+      ORIGIN: https://${DOMAIN}
+      RP_ID: ${DOMAIN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      electric:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: ..
+      target: web
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
+  electricdata:
+  caddydata:
+  caddyconfig:
