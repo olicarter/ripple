@@ -5,6 +5,11 @@ import { defineConfig, devices } from '@playwright/test';
 // - Caddy serves :5274 instead of :5174 and routes /api/* to :3101
 // - Vite web on :5173 is reused (it's API-agnostic, host header determines proxy)
 // Run with: npx playwright test --config=playwright.config.test.ts
+
+// Point the fixtures and global setup at the test instance (both default to the dev ports).
+process.env.PLAYWRIGHT_API_BASE ??= 'https://localhost:5274';
+process.env.PLAYWRIGHT_API_PROBE ??= 'http://localhost:3101/api/auth/test-reset';
+
 export default defineConfig({
   globalSetup: './e2e/global-setup.ts',
   testDir: './e2e',
@@ -20,6 +25,9 @@ export default defineConfig({
     baseURL: 'https://localhost:5274',
     ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+      : {},
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

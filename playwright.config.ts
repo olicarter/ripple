@@ -19,6 +19,11 @@ export default defineConfig({
     baseURL: 'https://localhost:5174',
     ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
+    // Use a preinstalled Chromium when the one matching this Playwright version
+    // isn't available (e.g. Claude Code cloud sessions, which can't download it).
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+      : {},
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
