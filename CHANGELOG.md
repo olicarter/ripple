@@ -9,8 +9,17 @@ All notable changes to Ripple are documented in this file.
 - Other members' votes on anonymous proposals, and on open proposals in orgs that hide votes until close, are no longer synced to browsers
 - Votes can only be cast, changed or deleted by the voter; previously any signed-in user could vote as, or edit the vote of, anyone
 - Users can only update or delete their own account; `GET /api/users` and `GET /api/orgs/:slug` return public fields only; the unauthenticated `GET /api/votes` listing is removed
+- Every API endpoint now enforces org access: private orgs' proposals, comments, arguments, votes, tallies and members are only readable by members; acting in an org requires membership; proposals can only be deleted by their author or a moderator; delegations can only be created and removed by the delegator
+- Slack connection now uses a session-bound OAuth state, so a workspace can't be attached to someone else's org
+- Sign-in and email-sending endpoints are rate limited per client IP (the API now trusts the reverse proxy's forwarded headers)
+- The API refuses to start in production with missing or development-default secrets
+
+### Added
+- `GET /api/health` readiness endpoint
+- Production `Dockerfile`, `deploy/docker-compose.prod.yml` with automatic HTTPS, and a deployment guide
 
 ### Fixed
+- Production builds run their migrations (only `.ts` migrations were loaded, so compiled builds ran none)
 - Fresh databases migrate cleanly (migrations 058–062 ran before the initial schema)
 - Multiple-choice options sync (`proposal_options` was missing from the Electric publication)
 - Admin feature toggles respond immediately instead of waiting for the sync round-trip

@@ -7,7 +7,7 @@ const dataSource = new DataSource({
   url:
     process.env.DATABASE_URL ??
     'postgresql://postgres:password@localhost:5432/ripple',
-  migrations: [path.join(__dirname, 'migrations', '*.ts')],
+  migrations: [path.join(__dirname, 'migrations', `*${__filename.endsWith('.ts') ? '.ts' : '.js'}`)],
 });
 
 async function run() {

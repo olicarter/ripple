@@ -9,12 +9,18 @@ import helmet from 'helmet';
 import type { Request, Response, NextFunction } from 'express';
 import { RedisStore } from 'connect-redis';
 import Redis from 'ioredis';
+import { assertProductionConfig } from './config/production-config';
 
 async function bootstrap() {
+  assertProductionConfig();
   const app = await NestFactory.create(AppModule, { rawBody: true });
+  // Behind Caddy/a load balancer: use X-Forwarded-For for client IPs (rate limits)
+  // and X-Forwarded-Proto so secure session cookies are issued over HTTPS.
+  app.getHttpAdapter().getInstance().set('trust proxy', process.env.TRUST_PROXY ?? 'loopback, linklocal, uniquelocal');
   app.setGlobalPrefix('api');
   app.use(helmet({ contentSecurityPolicy: false }));
-  app.enableCors({ origin: 'https://localhost:5173', credentials: true });
+  const origins = (process.env.ORIGIN ?? 'https://localhost:5174,http://localhost:5173').split(',').map((o) => o.trim());
+  app.enableCors({ origin: origins, credentials: true });
 
   app.use(cookieParser());
 

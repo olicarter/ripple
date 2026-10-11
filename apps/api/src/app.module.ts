@@ -77,7 +77,8 @@ import { HealthModule } from './health/health.module';
         } : {}),
       },
       entities: [User, Topic, Proposal, ProposalOption, ProposalReaction, ProposalVersion, ProposalSignature, ProposalLink, ProposalBoost, Prediction, Delegation, Vote, Credential, MagicLink, Comment, CommentReaction, Organisation, Membership, OrgInvite, Argument, AuditLogEntry, Veto, Endorsement, Notification, WebhookEndpoint, ApiKey],
-      migrations: [__dirname + '/db/migrations/*.ts'],
+      // .ts under ts-node in development, compiled .js in production (never the emitted .d.ts).
+      migrations: [__dirname + `/db/migrations/*${__filename.endsWith('.ts') ? '.ts' : '.js'}`],
       migrationsRun: true,
       synchronize: false,
     }),

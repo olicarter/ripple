@@ -35,6 +35,19 @@ npm workspaces monorepo (Node 22): `apps/api`, `apps/web`.
 - **Proxy**: Caddy (`Caddyfile`) serves `https://localhost:5174`:
   `/api/*` -> API :3001, everything else -> Vite :5173.
 
+## Access control
+- `apps/api/src/access/access.service.ts` is the single source of the rules:
+  an org's content is visible to everyone if the org is public, otherwise to
+  approved members; drafts only to their author; acting in an org needs
+  approved membership (optionally a minimum role). Use `assertCanViewProposal`
+  / `assertCanActOnProposal` / `assertRole` in controllers; use
+  `OptionalAuthGuard` for endpoints anonymous visitors may read.
+- Every new endpoint needs an explicit decision: guarded, or public on purpose.
+  Never take the acting user's id from the request body; use `req.user.id`.
+- Test-mode-only helpers (`/api/auth/test-*`, `/api/votes/test-cast`) let e2e
+  setup act for other users; they return 403 unless `NODE_ENV=test`.
+- `e2e/tests/access-control.spec.ts` and `vote-integrity.spec.ts` cover these rules.
+
 ## Electric sync and data exposure
 - Browsers never reach Electric directly. The web app requests shapes from
   `/api/electric/v1/shape`; `apps/api/src/electric` authorises them from the
@@ -87,6 +100,11 @@ npm workspaces monorepo (Node 22): `apps/api`, `apps/web`.
   predictions, notifications, audit_log, api_keys, webhook_endpoints, magic_links.
 
 ## Environment
+- With `NODE_ENV=production` the API refuses to start unless its secrets
+  (`SESSION_SECRET`, `ELECTRIC_SECRET`, `RECEIPT_SECRET`, `VOTE_EMAIL_SECRET`,
+  32+ chars, not the dev defaults) and `DATABASE_URL`, `ORIGIN`, `RP_ID`,
+  `APP_URL` are set (`src/config/production-config.ts`). `ORIGIN` also sets
+  CORS; `TRUST_PROXY` controls Express's trusted proxy hops.
 - `.env` is **not** loaded automatically (no dotenv); the API falls back to
   hard-coded local defaults, e.g. `DATABASE_URL=postgresql://postgres:password@localhost:5432/ripple`,
   `ELECTRIC_SECRET=ripple-dev-electric-secret` (must match docker-compose),
@@ -121,7 +139,12 @@ Electric-backed collections are in `collections.ts`; REST calls in `api.ts`.
   `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium` (the hook does).
 - The full suite (~450 tests) takes a while; run single specs while iterating.
 - Load tests: `load-tests/` (see its README).
+
+## Deployment
+- `Dockerfile` (targets `api` and `web`) and `deploy/` (production compose with
+  Caddy auto-TLS, `.env.example`, README covering releases, managed Postgres,
+  backups and monitoring). `GET /api/health` is the readiness probe.
 - Type-check/build: `npm run build` (there is no linter or unit-test runner).
-- CI (`.github/workflows/ci.yml`): `npm run build`, then the Playwright suite
-  against the docker compose stack. Dependabot runs from the repo root
+- CI (`.github/workflows/ci.yml`): `npm run build`, production Docker image
+  builds, then the Playwright suite against the docker compose stack. Dependabot runs from the repo root
   (`.github/dependabot.yml`) so the shared `package-lock.json` stays in sync.
