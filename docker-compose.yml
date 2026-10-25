@@ -2,7 +2,7 @@ name: ripple
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_DB: ripple
       POSTGRES_USER: postgres
@@ -36,7 +36,7 @@ services:
         condition: service_healthy
 
   postgres-replica:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_DB: ripple
       POSTGRES_USER: postgres
