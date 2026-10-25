@@ -30,7 +30,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^10.0.0",
-    "@vitejs/plugin-react": "^4",
+    "@vitejs/plugin-react": "^6",
     "rollup-plugin-visualizer": "^7.0.1",
     "typescript": "^5.5",
     "vite": "^6"
