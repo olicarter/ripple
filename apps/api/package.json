@@ -39,7 +39,7 @@
     "typeorm": "^0.3"
   },
   "devDependencies": {
-    "@types/node": "^22",
+    "@types/node": "^25",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.5"
